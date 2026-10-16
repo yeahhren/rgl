@@ -1,12 +1,13 @@
 #include <rgl/rgl.h>
 
+#include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define WIDTH 256
-#define HEIGHT 256
+#define WIDTH 512
+#define HEIGHT 512
 
 static uint32_t crc_table[256];
 
@@ -123,28 +124,188 @@ static int write_png(const char *path, const GLubyte *rgba, const int width, con
     return ok;
 }
 
-static void fill(const GLint x, const GLint y, const GLsizei width, const GLsizei height,
-                 const GLclampf r, const GLclampf g, const GLclampf b) {
-    glScissor(x, y, width, height);
-    glClearColor(r, g, b, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+static void cell(const GLint x, const GLint y) {
+    glViewport(x, y, WIDTH / 2, HEIGHT / 2);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+}
+
+static void draw_shading(void) {
+    cell(0, 0);
+
+    glBegin(GL_TRIANGLES);
+    glColor3f(1.0f, 0.0f, 0.0f);
+    glVertex2f(-0.9f, -0.9f);
+    glColor3f(0.0f, 1.0f, 0.0f);
+    glVertex2f(0.1f, -0.9f);
+    glColor3f(0.0f, 0.0f, 1.0f);
+    glVertex2f(-0.4f, 0.0f);
+    glEnd();
+
+    glShadeModel(GL_FLAT);
+    glBegin(GL_TRIANGLE_FAN);
+    glColor3f(1.0f, 1.0f, 1.0f);
+    glVertex2f(0.5f, 0.5f);
+    for (int i = 0; i <= 6; i++) {
+        const float a = (float) i * 6.2831853f / 6.0f;
+        glColor3f(0.5f + 0.5f * cosf(a), 0.5f + 0.5f * sinf(a), 0.5f);
+        glVertex2f(0.5f + 0.4f * cosf(a), 0.5f + 0.4f * sinf(a));
+    }
+    glEnd();
+    glShadeModel(GL_SMOOTH);
+
+    glBegin(GL_QUAD_STRIP);
+    for (int i = 0; i <= 8; i++) {
+        const float x = -0.9f + (float) i * 0.1f;
+        glColor3f((float) i / 8.0f, 0.3f, 1.0f - (float) i / 8.0f);
+        glVertex2f(x, 0.2f);
+        glVertex2f(x, 0.8f);
+    }
+    glEnd();
+}
+
+static void draw_lines(void) {
+    cell(WIDTH / 2, 0);
+
+    glBegin(GL_LINE_STRIP);
+    for (int i = 0; i <= 32; i++) {
+        const float x = -0.9f + (float) i * 1.8f / 32.0f;
+        glColor3f(1.0f, (float) i / 32.0f, 0.2f);
+        glVertex2f(x, -0.6f + 0.2f * sinf(x * 8.0f));
+    }
+    glEnd();
+
+    glLineWidth(4.0f);
+    glBegin(GL_LINES);
+    glColor3f(0.2f, 0.8f, 1.0f);
+    glVertex2f(-0.9f, -0.2f);
+    glVertex2f(0.9f, 0.0f);
+    glEnd();
+    glLineWidth(1.0f);
+
+    glEnable(GL_LINE_STIPPLE);
+    glLineStipple(2, 0x0f0f);
+    glColor3f(1.0f, 1.0f, 1.0f);
+    glBegin(GL_LINE_LOOP);
+    glVertex2f(-0.8f, 0.2f);
+    glVertex2f(0.8f, 0.2f);
+    glVertex2f(0.0f, 0.9f);
+    glEnd();
+    glDisable(GL_LINE_STIPPLE);
+
+    for (int i = 1; i <= 8; i++) {
+        glPointSize((float) i);
+        glBegin(GL_POINTS);
+        glColor3f(1.0f, 1.0f, 0.0f);
+        glVertex2f(-0.9f + (float) i * 0.2f, -0.85f);
+        glEnd();
+    }
+    glPointSize(1.0f);
+}
+
+static void draw_cube(void) {
+    static const float v[8][3] = {
+        {-1, -1, -1}, {1, -1, -1}, {1, 1, -1}, {-1, 1, -1},
+        {-1, -1, 1}, {1, -1, 1}, {1, 1, 1}, {-1, 1, 1},
+    };
+    static const int faces[6][4] = {
+        {0, 3, 2, 1}, {4, 5, 6, 7}, {0, 1, 5, 4},
+        {2, 3, 7, 6}, {0, 4, 7, 3}, {1, 2, 6, 5},
+    };
+
+    glViewport(0, HEIGHT / 2, WIDTH / 2, HEIGHT / 2);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glFrustum(-1.0, 1.0, -1.0, 1.0, 1.5, 20.0);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glTranslatef(0.0f, 0.0f, -4.0f);
+    glRotatef(30.0f, 1.0f, 0.0f, 0.0f);
+    glRotatef(-40.0f, 0.0f, 1.0f, 0.0f);
+
+    glEnable(GL_CULL_FACE);
+    glBegin(GL_QUADS);
+    for (int f = 0; f < 6; f++) {
+        for (int k = 0; k < 4; k++) {
+            const float *p = v[faces[f][k]];
+            glColor3f(0.5f + 0.5f * p[0], 0.5f + 0.5f * p[1], 0.5f + 0.5f * p[2]);
+            glVertex3fv(p);
+        }
+    }
+    glEnd();
+    glDisable(GL_CULL_FACE);
+
+    glLoadIdentity();
+    glTranslatef(0.0f, 0.0f, -2.0f);
+    glRotatef(45.0f, 0.0f, 1.0f, 0.0f);
+    glScalef(0.8f, 0.8f, 0.8f);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glColor3f(1.0f, 1.0f, 1.0f);
+    glBegin(GL_QUADS);
+    for (int f = 0; f < 6; f++) {
+        for (int k = 0; k < 4; k++)
+            glVertex3fv(v[faces[f][k]]);
+    }
+    glEnd();
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+}
+
+static void draw_polygons(void) {
+    static GLubyte stipple[128];
+    for (int i = 0; i < 128; i++)
+        stipple[i] = (i / 4 / 4) % 2 ? 0xf0 : 0x0f;
+
+    cell(WIDTH / 2, HEIGHT / 2);
+
+    glEnable(GL_POLYGON_STIPPLE);
+    glPolygonStipple(stipple);
+    glColor3f(0.9f, 0.6f, 0.2f);
+    glRectf(-0.9f, 0.1f, -0.1f, 0.9f);
+    glDisable(GL_POLYGON_STIPPLE);
+
+    glPolygonMode(GL_FRONT, GL_LINE);
+    glBegin(GL_POLYGON);
+    for (int i = 0; i < 5; i++) {
+        const float a = 1.5707963f + (float) i * 6.2831853f / 5.0f;
+        glColor3f(0.3f + 0.7f * (float) (i % 2), 1.0f, 0.5f);
+        glEdgeFlag(i != 2);
+        glVertex2f(0.5f + 0.4f * cosf(a), 0.5f + 0.4f * sinf(a));
+    }
+    glEnd();
+    glEdgeFlag(GL_TRUE);
+
+    glPolygonMode(GL_FRONT, GL_POINT);
+    glPointSize(5.0f);
+    glColor3f(1.0f, 0.3f, 0.6f);
+    glRectf(-0.8f, -0.8f, -0.2f, -0.2f);
+    glPointSize(1.0f);
+    glPolygonMode(GL_FRONT, GL_FILL);
+
+    static const GLdouble plane[4] = {1.0, 1.0, 0.0, 0.0};
+    glClipPlane(GL_CLIP_PLANE0, plane);
+    glEnable(GL_CLIP_PLANE0);
+    glBegin(GL_TRIANGLES);
+    glColor3f(0.2f, 0.4f, 1.0f);
+    glVertex2f(0.0f, -1.5f);
+    glColor3f(0.2f, 1.0f, 0.8f);
+    glVertex2f(1.5f, -1.0f);
+    glColor3f(1.0f, 1.0f, 1.0f);
+    glVertex2f(0.3f, 0.0f);
+    glEnd();
+    glDisable(GL_CLIP_PLANE0);
 }
 
 static void draw(void) {
     glClearColor(0.1f, 0.1f, 0.12f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    glEnable(GL_SCISSOR_TEST);
-    for (int i = 0; i < 8; i++) {
-        const GLclampf t = (GLclampf) i / 7.0f;
-        fill(16 + i * 28, 16, 24, 24, t, 0.2f, 1.0f - t);
-    }
-    fill(16, 56, 224, 184, 0.9f, 0.9f, 0.9f);
-
-    glColorMask(GL_TRUE, GL_FALSE, GL_FALSE, GL_FALSE);
-    fill(48, 88, 160, 120, 0.0f, 0.0f, 0.0f);
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-    glDisable(GL_SCISSOR_TEST);
+    draw_shading();
+    draw_lines();
+    draw_cube();
+    draw_polygons();
 }
 
 int main(const int argc, char **argv) {

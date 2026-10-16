@@ -1,4 +1,4 @@
-#include "context.h"
+#include "pipeline.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -31,7 +31,8 @@ static void vertex(const GLfloat x, const GLfloat y, const GLfloat z, const GLfl
     rgl_matrix_transform(rgl_matrix_top(&ctx->transform.modelview), object, v->eye);
     rgl_matrix_transform(rgl_matrix_top(&ctx->transform.projection), v->eye, v->clip);
     rgl_matrix_transform(rgl_matrix_top(&ctx->transform.texture), ctx->current.tex_coord, v->tex_coord);
-    memcpy(v->color, ctx->current.color, sizeof(v->color));
+    for (int i = 0; i < 4; i++)
+        v->color[i] = rgl_clampf(ctx->current.color[i], 0.0f, 1.0f);
     memcpy(v->normal, ctx->current.normal, sizeof(v->normal));
     v->edge_flag = ctx->current.edge_flag;
 }
@@ -57,6 +58,7 @@ void glEnd(void) {
         return;
     }
     ctx->in_begin_end = GL_FALSE;
+    rgl_render_primitive(ctx);
     ctx->primitive.count = 0;
 }
 

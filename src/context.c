@@ -1,6 +1,7 @@
 #include "context.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 rgl_context *rgl_current = NULL;
 
@@ -42,6 +43,20 @@ static void init_state(rgl_context *ctx) {
     ctx->current.normal[2] = 1.0f;
     ctx->current.tex_coord[3] = 1.0f;
     ctx->current.edge_flag = GL_TRUE;
+
+    ctx->point.size = 1.0f;
+
+    ctx->line.width = 1.0f;
+    ctx->line.stipple_factor = 1;
+    ctx->line.stipple_pattern = 0xffff;
+
+    ctx->polygon.front_mode = GL_FILL;
+    ctx->polygon.back_mode = GL_FILL;
+    ctx->polygon.cull_face = GL_BACK;
+    ctx->polygon.front_face = GL_CCW;
+    memset(ctx->polygon.stipple, 0xff, sizeof(ctx->polygon.stipple));
+
+    ctx->lighting.shade_model = GL_SMOOTH;
 }
 
 rgl_context *rgl_create_context(const GLsizei width, const GLsizei height) {
@@ -76,6 +91,8 @@ void rgl_destroy_context(rgl_context *ctx) {
     free(ctx->fb.depth);
     free(ctx->fb.stencil);
     free(ctx->primitive.vertices);
+    free(ctx->primitive.clip[0]);
+    free(ctx->primitive.clip[1]);
     free(ctx);
 }
 

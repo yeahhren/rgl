@@ -217,3 +217,47 @@ void glPopMatrix(void) {
     }
     stack->depth--;
 }
+
+GLboolean rgl_matrix_invert(const GLfloat m[16], GLfloat out[16]) {
+    GLdouble a[4][8];
+    for (int r = 0; r < 4; r++) {
+        for (int c = 0; c < 4; c++) {
+            a[r][c] = m[c * 4 + r];
+            a[r][c + 4] = r == c ? 1.0 : 0.0;
+        }
+    }
+
+    for (int c = 0; c < 4; c++) {
+        int pivot = c;
+        for (int r = c + 1; r < 4; r++) {
+            if (fabs(a[r][c]) > fabs(a[pivot][c]))
+                pivot = r;
+        }
+        if (a[pivot][c] == 0.0)
+            return GL_FALSE;
+        if (pivot != c) {
+            for (int k = 0; k < 8; k++) {
+                const GLdouble t = a[c][k];
+                a[c][k] = a[pivot][k];
+                a[pivot][k] = t;
+            }
+        }
+
+        const GLdouble inv = 1.0 / a[c][c];
+        for (int k = 0; k < 8; k++)
+            a[c][k] *= inv;
+        for (int r = 0; r < 4; r++) {
+            if (r == c || a[r][c] == 0.0)
+                continue;
+            const GLdouble f = a[r][c];
+            for (int k = 0; k < 8; k++)
+                a[r][k] -= f * a[c][k];
+        }
+    }
+
+    for (int r = 0; r < 4; r++) {
+        for (int c = 0; c < 4; c++)
+            out[c * 4 + r] = (GLfloat) a[r][c + 4];
+    }
+    return GL_TRUE;
+}

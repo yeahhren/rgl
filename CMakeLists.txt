@@ -7,9 +7,15 @@ set(CMAKE_C_EXTENSIONS OFF)
 
 add_library(rgl STATIC
         src/clear.c
+        src/clip.c
         src/context.c
         src/current.c
+        src/fragment.c
+        src/line.c
         src/matrix.c
+        src/point.c
+        src/polygon.c
+        src/primitive.c
         src/state.c
         src/vertex.c
 )

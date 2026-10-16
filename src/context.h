@@ -13,6 +13,10 @@
 #define RGL_MAX_PROJECTION_STACK_DEPTH 2
 #define RGL_MAX_TEXTURE_STACK_DEPTH 2
 
+#define RGL_MAX_POINT_SIZE 64
+#define RGL_MAX_LINE_WIDTH 64
+
+#define RGL_SUBPIXEL_BITS 4
 #define RGL_DEPTH_BITS 24
 #define RGL_STENCIL_BITS 8
 #define RGL_DEPTH_MAX ((1u << RGL_DEPTH_BITS) - 1u)
@@ -96,6 +100,30 @@ struct rgl_transform {
     struct rgl_matrix_stack modelview;
     struct rgl_matrix_stack projection;
     struct rgl_matrix_stack texture;
+    GLfloat clip_plane[RGL_MAX_CLIP_PLANES][4];
+};
+
+struct rgl_point {
+    GLfloat size;
+};
+
+struct rgl_line {
+    GLfloat width;
+    GLint stipple_factor;
+    GLushort stipple_pattern;
+    GLuint stipple_counter;
+};
+
+struct rgl_polygon {
+    GLenum front_mode;
+    GLenum back_mode;
+    GLenum cull_face;
+    GLenum front_face;
+    GLubyte stipple[128];
+};
+
+struct rgl_lighting {
+    GLenum shade_model;
 };
 
 struct rgl_current_values {
@@ -113,6 +141,8 @@ struct rgl_vertex {
     GLfloat tex_coord[4];
     GLfloat normal[3];
     GLboolean edge_flag;
+    GLfloat window[3];
+    GLfloat inv_w;
 };
 
 struct rgl_primitive {
@@ -120,6 +150,8 @@ struct rgl_primitive {
     struct rgl_vertex *vertices;
     size_t count;
     size_t capacity;
+    struct rgl_vertex *clip[2];
+    size_t clip_capacity;
 };
 
 struct rgl_context {
@@ -132,6 +164,10 @@ struct rgl_context {
     struct rgl_viewport viewport;
     struct rgl_scissor scissor;
     struct rgl_transform transform;
+    struct rgl_point point;
+    struct rgl_line line;
+    struct rgl_polygon polygon;
+    struct rgl_lighting lighting;
     struct rgl_current_values current;
     struct rgl_primitive primitive;
 };
@@ -146,6 +182,7 @@ GLdouble rgl_clampd(GLdouble x, GLdouble lo, GLdouble hi);
 void rgl_matrix_identity(GLfloat m[16]);
 void rgl_matrix_transform(const GLfloat m[16], const GLfloat in[4], GLfloat out[4]);
 GLfloat *rgl_matrix_top(struct rgl_matrix_stack *stack);
+GLboolean rgl_matrix_invert(const GLfloat m[16], GLfloat out[16]);
 
 #define GET_CONTEXT(ctx) \
     struct rgl_context *ctx = rgl_current; \
