@@ -4,6 +4,12 @@
 
 rgl_context *rgl_current = NULL;
 
+static void init_stack(struct rgl_matrix_stack *stack, const GLint max_depth) {
+    rgl_matrix_identity(stack->items[0]);
+    stack->depth = 1;
+    stack->max_depth = max_depth;
+}
+
 static void init_state(rgl_context *ctx) {
     ctx->error = GL_NO_ERROR;
     ctx->in_begin_end = GL_FALSE;
@@ -24,6 +30,18 @@ static void init_state(rgl_context *ctx) {
 
     ctx->scissor.width = ctx->fb.width;
     ctx->scissor.height = ctx->fb.height;
+
+    ctx->transform.matrix_mode = GL_MODELVIEW;
+    init_stack(&ctx->transform.modelview, RGL_MAX_MODELVIEW_STACK_DEPTH);
+    init_stack(&ctx->transform.projection, RGL_MAX_PROJECTION_STACK_DEPTH);
+    init_stack(&ctx->transform.texture, RGL_MAX_TEXTURE_STACK_DEPTH);
+
+    for (int i = 0; i < 4; i++)
+        ctx->current.color[i] = 1.0f;
+    ctx->current.index = 1.0f;
+    ctx->current.normal[2] = 1.0f;
+    ctx->current.tex_coord[3] = 1.0f;
+    ctx->current.edge_flag = GL_TRUE;
 }
 
 rgl_context *rgl_create_context(const GLsizei width, const GLsizei height) {
@@ -57,6 +75,7 @@ void rgl_destroy_context(rgl_context *ctx) {
     free(ctx->fb.color);
     free(ctx->fb.depth);
     free(ctx->fb.stencil);
+    free(ctx->primitive.vertices);
     free(ctx);
 }
 
@@ -75,4 +94,12 @@ const GLubyte *rgl_get_color_buffer(const rgl_context *ctx) {
 void rgl_error(rgl_context *ctx, GLenum error) {
     if (ctx->error == GL_NO_ERROR)
         ctx->error = error;
+}
+
+GLfloat rgl_clampf(const GLfloat x, const GLfloat lo, const GLfloat hi) {
+    return x < lo ? lo : x > hi ? hi : x;
+}
+
+GLdouble rgl_clampd(const GLdouble x, const GLdouble lo, const GLdouble hi) {
+    return x < lo ? lo : x > hi ? hi : x;
 }

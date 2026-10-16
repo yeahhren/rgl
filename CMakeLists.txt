@@ -8,12 +8,19 @@ set(CMAKE_C_EXTENSIONS OFF)
 add_library(rgl STATIC
         src/clear.c
         src/context.c
+        src/current.c
+        src/matrix.c
         src/state.c
+        src/vertex.c
 )
 target_include_directories(rgl
         PUBLIC include
         PRIVATE src
 )
+
+if (NOT WIN32)
+    target_link_libraries(rgl PRIVATE m)
+endif ()
 
 if (MSVC)
     target_compile_options(rgl PRIVATE /W4)
@@ -21,8 +28,5 @@ else ()
     target_compile_options(rgl PRIVATE -Wall -Wextra -Wpedantic)
 endif ()
 
-enable_testing()
-
-add_executable(rgl_test_clear tests/test_clear.c)
-target_link_libraries(rgl_test_clear PRIVATE rgl)
-add_test(NAME clear COMMAND rgl_test_clear)
+add_executable(rgl_test test.c)
+target_link_libraries(rgl_test PRIVATE rgl)

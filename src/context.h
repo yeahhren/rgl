@@ -9,6 +9,9 @@
 #define RGL_MAX_CLIP_PLANES 6
 #define RGL_MAX_EVAL_MAPS 9
 #define RGL_MAX_VIEWPORT_DIM 4096
+#define RGL_MAX_MODELVIEW_STACK_DEPTH 32
+#define RGL_MAX_PROJECTION_STACK_DEPTH 2
+#define RGL_MAX_TEXTURE_STACK_DEPTH 2
 
 #define RGL_DEPTH_BITS 24
 #define RGL_STENCIL_BITS 8
@@ -82,6 +85,43 @@ struct rgl_scissor {
     GLsizei height;
 };
 
+struct rgl_matrix_stack {
+    GLfloat items[RGL_MAX_MODELVIEW_STACK_DEPTH][16];
+    GLint depth;
+    GLint max_depth;
+};
+
+struct rgl_transform {
+    GLenum matrix_mode;
+    struct rgl_matrix_stack modelview;
+    struct rgl_matrix_stack projection;
+    struct rgl_matrix_stack texture;
+};
+
+struct rgl_current_values {
+    GLfloat color[4];
+    GLfloat index;
+    GLfloat normal[3];
+    GLfloat tex_coord[4];
+    GLboolean edge_flag;
+};
+
+struct rgl_vertex {
+    GLfloat eye[4];
+    GLfloat clip[4];
+    GLfloat color[4];
+    GLfloat tex_coord[4];
+    GLfloat normal[3];
+    GLboolean edge_flag;
+};
+
+struct rgl_primitive {
+    GLenum mode;
+    struct rgl_vertex *vertices;
+    size_t count;
+    size_t capacity;
+};
+
 struct rgl_context {
     GLenum error;
     GLboolean in_begin_end;
@@ -91,11 +131,21 @@ struct rgl_context {
     struct rgl_mask mask;
     struct rgl_viewport viewport;
     struct rgl_scissor scissor;
+    struct rgl_transform transform;
+    struct rgl_current_values current;
+    struct rgl_primitive primitive;
 };
 
 extern rgl_context *rgl_current;
 
 void rgl_error(rgl_context *ctx, GLenum error);
+
+GLfloat rgl_clampf(GLfloat x, GLfloat lo, GLfloat hi);
+GLdouble rgl_clampd(GLdouble x, GLdouble lo, GLdouble hi);
+
+void rgl_matrix_identity(GLfloat m[16]);
+void rgl_matrix_transform(const GLfloat m[16], const GLfloat in[4], GLfloat out[4]);
+GLfloat *rgl_matrix_top(struct rgl_matrix_stack *stack);
 
 #define GET_CONTEXT(ctx) \
     struct rgl_context *ctx = rgl_current; \
@@ -122,13 +172,5 @@ void rgl_error(rgl_context *ctx, GLenum error);
             return (ret); \
         } \
     } while (0)
-
-static GLfloat rgl_clampf(const GLfloat x, const GLfloat lo, const GLfloat hi) {
-    return x < lo ? lo : x > hi ? hi : x;
-}
-
-static GLdouble rgl_clampd(const GLdouble x, const GLdouble lo, const GLdouble hi) {
-    return x < lo ? lo : x > hi ? hi : x;
-}
 
 #endif
