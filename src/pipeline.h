@@ -17,8 +17,11 @@ struct rgl_fragment {
 void rgl_light_vertex(rgl_context *ctx, struct rgl_vertex *v);
 void rgl_texgen(const rgl_context *ctx, const GLfloat object[4], const struct rgl_vertex *v, GLfloat out[4]);
 GLboolean rgl_texgen_needs_normal(const rgl_context *ctx);
+void rgl_transform_vertex(rgl_context *ctx, const GLfloat object[4], struct rgl_vertex *v);
 void rgl_render_primitive(rgl_context *ctx);
 
+GLboolean rgl_point_visible(const rgl_context *ctx, const struct rgl_vertex *v);
+void rgl_to_window(const rgl_context *ctx, struct rgl_vertex *v);
 void rgl_clip_point(rgl_context *ctx, const struct rgl_vertex *v);
 void rgl_clip_line(rgl_context *ctx, const struct rgl_vertex *a, const struct rgl_vertex *b,
                    const GLfloat *flat_color);
@@ -36,5 +39,7 @@ GLboolean rgl_texturing_enabled(const rgl_context *ctx);
 void rgl_texture_fragment(rgl_context *ctx, const struct rgl_fragment *frag, GLfloat color[4]);
 void rgl_fog_fragment(const rgl_context *ctx, const struct rgl_fragment *frag, GLfloat color[4]);
 void rgl_write_fragment(rgl_context *ctx, const struct rgl_fragment *frag);
+void rgl_write_stencil(rgl_context *ctx, GLint x, GLint y, GLuint value);
+void rgl_init_raster_fragment(const rgl_context *ctx, struct rgl_fragment *frag);
 
 #endif

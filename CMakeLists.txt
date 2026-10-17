@@ -11,6 +11,7 @@ add_library(rgl STATIC
         src/clip.c
         src/context.c
         src/current.c
+        src/drawpix.c
         src/fog.c
         src/fragment.c
         src/light.c
@@ -20,6 +21,7 @@ add_library(rgl STATIC
         src/point.c
         src/polygon.c
         src/primitive.c
+        src/raster.c
         src/state.c
         src/texgen.c
         src/texture.c

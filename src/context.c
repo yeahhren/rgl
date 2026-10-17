@@ -50,6 +50,20 @@ static void init_state(rgl_context *ctx) {
     ctx->pixel.read_buffer = GL_FRONT;
     ctx->pixel.pack.alignment = 4;
     ctx->pixel.unpack.alignment = 4;
+    for (int i = 0; i < 4; i++)
+        ctx->pixel.transfer.scale[i] = 1.0f;
+    ctx->pixel.transfer.depth_scale = 1.0f;
+    for (int i = 0; i < RGL_PIXEL_MAPS; i++)
+        ctx->pixel.maps[i].size = 1;
+    ctx->pixel.zoom_x = 1.0f;
+    ctx->pixel.zoom_y = 1.0f;
+
+    ctx->raster.clip_w = 1.0f;
+    for (int i = 0; i < 4; i++)
+        ctx->raster.color[i] = 1.0f;
+    ctx->raster.index = 1.0f;
+    ctx->raster.tex_coord[3] = 1.0f;
+    ctx->raster.valid = GL_TRUE;
 
     ctx->transform.matrix_mode = GL_MODELVIEW;
     init_stack(&ctx->transform.modelview, RGL_MAX_MODELVIEW_STACK_DEPTH);

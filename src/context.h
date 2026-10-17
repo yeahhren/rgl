@@ -16,6 +16,9 @@
 #define RGL_MAX_TEXTURE_SIZE 1024
 #define RGL_MAX_TEXTURE_LEVELS 11
 
+#define RGL_MAX_PIXEL_MAP_TABLE 256
+#define RGL_PIXEL_MAPS 10
+
 #define RGL_MAX_POINT_SIZE 64
 #define RGL_MAX_LINE_WIDTH 64
 
@@ -158,10 +161,40 @@ struct rgl_pixel_store {
     GLint alignment;
 };
 
+struct rgl_pixel_transfer {
+    GLboolean map_color;
+    GLboolean map_stencil;
+    GLint index_shift;
+    GLint index_offset;
+    GLfloat scale[4];
+    GLfloat bias[4];
+    GLfloat depth_scale;
+    GLfloat depth_bias;
+};
+
+struct rgl_pixel_map {
+    GLint size;
+    GLfloat values[RGL_MAX_PIXEL_MAP_TABLE];
+};
+
 struct rgl_pixel {
     GLenum read_buffer;
     struct rgl_pixel_store pack;
     struct rgl_pixel_store unpack;
+    struct rgl_pixel_transfer transfer;
+    struct rgl_pixel_map maps[RGL_PIXEL_MAPS];
+    GLfloat zoom_x;
+    GLfloat zoom_y;
+};
+
+struct rgl_raster_pos {
+    GLfloat window[3];
+    GLfloat clip_w;
+    GLfloat distance;
+    GLfloat color[4];
+    GLfloat index;
+    GLfloat tex_coord[4];
+    GLboolean valid;
 };
 
 struct rgl_texture_image {
@@ -288,6 +321,7 @@ struct rgl_context {
     struct rgl_lighting lighting;
     struct rgl_fog fog;
     struct rgl_current_values current;
+    struct rgl_raster_pos raster;
     struct rgl_primitive primitive;
 };
 

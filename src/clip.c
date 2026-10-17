@@ -48,7 +48,7 @@ static void interpolate(struct rgl_vertex *out, const struct rgl_vertex *a, cons
     out->fog_z = a->fog_z + t * (b->fog_z - a->fog_z);
 }
 
-static void to_window(const rgl_context *ctx, struct rgl_vertex *v) {
+void rgl_to_window(const rgl_context *ctx, struct rgl_vertex *v) {
     const struct rgl_viewport *vp = &ctx->viewport;
     const GLfloat inv_w = 1.0f / v->clip[3];
 
@@ -73,16 +73,20 @@ static GLboolean reserve(rgl_context *ctx, const size_t count) {
     return GL_TRUE;
 }
 
-void rgl_clip_point(rgl_context *ctx, const struct rgl_vertex *v) {
+GLboolean rgl_point_visible(const rgl_context *ctx, const struct rgl_vertex *v) {
     for (int plane = 0; plane < TOTAL_PLANES; plane++) {
         if (plane_enabled(ctx, plane) && distance(ctx, v, plane) < 0.0f)
-            return;
+            return GL_FALSE;
     }
-    if (v->clip[3] <= 0.0f)
+    return v->clip[3] > 0.0f;
+}
+
+void rgl_clip_point(rgl_context *ctx, const struct rgl_vertex *v) {
+    if (!rgl_point_visible(ctx, v))
         return;
 
     struct rgl_vertex w = *v;
-    to_window(ctx, &w);
+    rgl_to_window(ctx, &w);
     rgl_raster_point(ctx, &w, w.color);
 }
 
@@ -121,8 +125,8 @@ void rgl_clip_line(rgl_context *ctx, const struct rgl_vertex *a, const struct rg
     if (p.clip[3] <= 0.0f || q.clip[3] <= 0.0f)
         return;
 
-    to_window(ctx, &p);
-    to_window(ctx, &q);
+    rgl_to_window(ctx, &p);
+    rgl_to_window(ctx, &q);
     rgl_raster_line(ctx, &p, &q, flat_color);
 }
 
@@ -180,7 +184,7 @@ void rgl_clip_polygon(rgl_context *ctx, const struct rgl_vertex *const *vertices
     for (size_t i = 0; i < n; i++) {
         if (in[i].clip[3] <= 0.0f)
             return;
-        to_window(ctx, &in[i]);
+        rgl_to_window(ctx, &in[i]);
     }
     rgl_raster_polygon(ctx, in, n, provoking);
 }

@@ -307,7 +307,7 @@ static void tex_image(rgl_context *ctx, const GLenum target, const GLint level, 
         return;
     }
 
-    rgl_unpack_rgba(&ctx->pixel.unpack, width, height, format, type, pixels, data);
+    rgl_unpack_rgba(ctx, width, height, format, type, pixels, data);
     for (size_t i = 0; i < count; i++) {
         GLfloat *p = data + i * 4;
         if (components <= 2)

@@ -181,6 +181,16 @@ void rgl_write_fragment(rgl_context *ctx, const struct rgl_fragment *frag) {
         write_color(ctx, index, color);
 }
 
+void rgl_write_stencil(rgl_context *ctx, const GLint x, const GLint y, const GLuint value) {
+    const struct rgl_framebuffer *fb = &ctx->fb;
+    if (x < 0 || y < 0 || x >= fb->width || y >= fb->height || !scissor_pass(ctx, x, y))
+        return;
+
+    GLubyte *p = &fb->stencil[(size_t) y * (size_t) fb->width + (size_t) x];
+    const GLuint mask = ctx->mask.stencil & RGL_STENCIL_MAX;
+    *p = (GLubyte) ((*p & ~mask) | (value & mask));
+}
+
 void glAlphaFunc(const GLenum func, const GLclampf ref) {
     GET_CONTEXT(ctx);
     OUTSIDE_BEGIN_END(ctx);

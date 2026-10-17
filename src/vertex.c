@@ -31,6 +31,21 @@ static void eye_normal(rgl_context *ctx, GLfloat out[3]) {
     }
 }
 
+void rgl_transform_vertex(rgl_context *ctx, const GLfloat object[4], struct rgl_vertex *v) {
+    rgl_matrix_transform(rgl_matrix_top(&ctx->transform.modelview), object, v->eye);
+    rgl_matrix_transform(rgl_matrix_top(&ctx->transform.projection), v->eye, v->clip);
+    v->fog_z = fabsf(v->eye[3] != 0.0f ? v->eye[2] / v->eye[3] : v->eye[2]);
+    if (ctx->enable.lighting || rgl_texgen_needs_normal(ctx))
+        eye_normal(ctx, v->normal);
+    else
+        memcpy(v->normal, ctx->current.normal, sizeof(v->normal));
+    rgl_light_vertex(ctx, v);
+
+    GLfloat tex_coord[4];
+    rgl_texgen(ctx, object, v, tex_coord);
+    rgl_matrix_transform(rgl_matrix_top(&ctx->transform.texture), tex_coord, v->tex_coord);
+}
+
 static void vertex(const GLfloat x, const GLfloat y, const GLfloat z, const GLfloat w) {
     GET_CONTEXT(ctx);
     if (!ctx->in_begin_end)
@@ -44,18 +59,7 @@ static void vertex(const GLfloat x, const GLfloat y, const GLfloat z, const GLfl
 
     struct rgl_vertex *v = &p->vertices[p->count++];
     const GLfloat object[4] = {x, y, z, w};
-    rgl_matrix_transform(rgl_matrix_top(&ctx->transform.modelview), object, v->eye);
-    rgl_matrix_transform(rgl_matrix_top(&ctx->transform.projection), v->eye, v->clip);
-    v->fog_z = fabsf(v->eye[3] != 0.0f ? v->eye[2] / v->eye[3] : v->eye[2]);
-    if (ctx->enable.lighting || rgl_texgen_needs_normal(ctx))
-        eye_normal(ctx, v->normal);
-    else
-        memcpy(v->normal, ctx->current.normal, sizeof(v->normal));
-    rgl_light_vertex(ctx, v);
-
-    GLfloat tex_coord[4];
-    rgl_texgen(ctx, object, v, tex_coord);
-    rgl_matrix_transform(rgl_matrix_top(&ctx->transform.texture), tex_coord, v->tex_coord);
+    rgl_transform_vertex(ctx, object, v);
     v->edge_flag = ctx->current.edge_flag;
 }
 
