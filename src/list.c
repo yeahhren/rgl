@@ -258,6 +258,9 @@ static void execute_node(rgl_context *ctx, const struct rgl_list_node *n) {
         case RGL_OP_FRUSTUM:
             glFrustum(a[0].d, a[1].d, a[2].d, a[3].d, a[4].d, a[5].d);
             break;
+        case RGL_OP_HINT:
+            glHint(a[0].e, a[1].e);
+            break;
         case RGL_OP_INDEX:
             glIndexf(a[0].f);
             break;
@@ -344,11 +347,17 @@ static void execute_node(rgl_context *ctx, const struct rgl_list_node *n) {
         case RGL_OP_POLYGON_MODE:
             glPolygonMode(a[0].e, a[1].e);
             break;
+        case RGL_OP_POP_ATTRIB:
+            glPopAttrib();
+            break;
         case RGL_OP_POP_MATRIX:
             glPopMatrix();
             break;
         case RGL_OP_POP_NAME:
             glPopName();
+            break;
+        case RGL_OP_PUSH_ATTRIB:
+            glPushAttrib(a[0].u);
             break;
         case RGL_OP_PUSH_MATRIX:
             glPushMatrix();

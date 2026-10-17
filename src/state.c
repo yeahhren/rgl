@@ -1,7 +1,7 @@
 #include "context.h"
 #include "list.h"
 
-static GLboolean *cap_flag(rgl_context *ctx, const GLenum cap) {
+GLboolean *rgl_cap_flag(rgl_context *ctx, const GLenum cap) {
     struct rgl_enable *e = &ctx->enable;
 
     if (cap >= GL_CLIP_PLANE0 && cap < GL_CLIP_PLANE0 + RGL_MAX_CLIP_PLANES)
@@ -67,7 +67,7 @@ static void set_cap(const GLenum cap, const GLboolean value) {
         return;
     OUTSIDE_BEGIN_END(ctx);
 
-    GLboolean *flag = cap_flag(ctx, cap);
+    GLboolean *flag = rgl_cap_flag(ctx, cap);
     if (flag == NULL) {
         rgl_error(ctx, GL_INVALID_ENUM);
         return;
@@ -89,7 +89,7 @@ GLboolean glIsEnabled(const GLenum cap) {
     GET_CONTEXT_OR(ctx, GL_FALSE);
     OUTSIDE_BEGIN_END_OR(ctx, GL_FALSE);
 
-    const GLboolean *flag = cap_flag(ctx, cap);
+    const GLboolean *flag = rgl_cap_flag(ctx, cap);
     if (flag == NULL) {
         rgl_error(ctx, GL_INVALID_ENUM);
         return GL_FALSE;

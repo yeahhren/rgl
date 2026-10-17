@@ -95,6 +95,12 @@ static void init_state(rgl_context *ctx) {
     rgl_init_eval(ctx);
 
     ctx->render_mode = GL_RENDER;
+
+    ctx->hints.perspective_correction = GL_DONT_CARE;
+    ctx->hints.point_smooth = GL_DONT_CARE;
+    ctx->hints.line_smooth = GL_DONT_CARE;
+    ctx->hints.polygon_smooth = GL_DONT_CARE;
+    ctx->hints.fog = GL_DONT_CARE;
     ctx->feedback.type = GL_2D;
 
     ctx->fog.mode = GL_EXP;

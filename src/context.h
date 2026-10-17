@@ -22,6 +22,7 @@
 
 #define RGL_MAX_LIST_NESTING 64
 #define RGL_MAX_NAME_STACK_DEPTH 64
+#define RGL_MAX_ATTRIB_STACK_DEPTH 16
 
 #define RGL_MAX_POINT_SIZE 64
 #define RGL_MAX_LINE_WIDTH 64
@@ -369,6 +370,58 @@ struct rgl_feedback {
     GLboolean buffer_set;
 };
 
+struct rgl_hints {
+    GLenum perspective_correction;
+    GLenum point_smooth;
+    GLenum line_smooth;
+    GLenum polygon_smooth;
+    GLenum fog;
+};
+
+struct rgl_texture_params {
+    GLenum min_filter;
+    GLenum mag_filter;
+    GLenum wrap_s;
+    GLenum wrap_t;
+    GLfloat border_color[4];
+};
+
+struct rgl_attrib {
+    GLbitfield mask;
+    struct rgl_enable enable;
+    struct rgl_clear clear;
+    struct rgl_mask write_mask;
+    struct rgl_viewport viewport;
+    struct rgl_scissor scissor;
+    struct rgl_color_buffer color_buffer;
+    struct rgl_depth depth;
+    struct rgl_stencil stencil;
+    GLenum read_buffer;
+    struct rgl_pixel_transfer transfer;
+    GLfloat zoom_x;
+    GLfloat zoom_y;
+    struct rgl_point point;
+    struct rgl_line line;
+    struct rgl_polygon polygon;
+    struct rgl_lighting lighting;
+    struct rgl_fog fog;
+    struct rgl_current_values current;
+    struct rgl_raster_pos raster;
+    struct rgl_hints hints;
+    GLenum matrix_mode;
+    GLfloat clip_plane[RGL_MAX_CLIP_PLANES][4];
+    GLuint list_base;
+    GLint grid1_un;
+    GLfloat grid1_domain[2];
+    GLint grid2_segments[2];
+    GLfloat grid2_domain[4];
+    struct rgl_texture_params texture_1d;
+    struct rgl_texture_params texture_2d;
+    GLenum env_mode;
+    GLfloat env_color[4];
+    struct rgl_texgen gen[4];
+};
+
 struct rgl_list_node;
 
 struct rgl_display_list {
@@ -417,6 +470,9 @@ struct rgl_context {
     GLenum render_mode;
     struct rgl_select select;
     struct rgl_feedback feedback;
+    struct rgl_hints hints;
+    struct rgl_attrib attrib[RGL_MAX_ATTRIB_STACK_DEPTH];
+    GLint attrib_depth;
     struct rgl_primitive primitive;
 };
 
@@ -425,6 +481,8 @@ extern rgl_context *rgl_current;
 void rgl_error(rgl_context *ctx, GLenum error);
 
 struct rgl_rect rgl_scissor_rect(const rgl_context *ctx);
+
+GLboolean *rgl_cap_flag(rgl_context *ctx, GLenum cap);
 
 GLfloat rgl_clampf(GLfloat x, GLfloat lo, GLfloat hi);
 GLdouble rgl_clampd(GLdouble x, GLdouble lo, GLdouble hi);

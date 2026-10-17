@@ -7,6 +7,7 @@ set(CMAKE_C_EXTENSIONS OFF)
 
 add_library(rgl STATIC
         src/accum.c
+        src/attrib.c
         src/buffer.c
         src/clear.c
         src/clip.c
@@ -17,6 +18,7 @@ add_library(rgl STATIC
         src/feedback.c
         src/fog.c
         src/fragment.c
+        src/get.c
         src/light.c
         src/list.c
         src/line.c
