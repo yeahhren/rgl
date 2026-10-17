@@ -46,6 +46,7 @@ static void vertex(const GLfloat x, const GLfloat y, const GLfloat z, const GLfl
     const GLfloat object[4] = {x, y, z, w};
     rgl_matrix_transform(rgl_matrix_top(&ctx->transform.modelview), object, v->eye);
     rgl_matrix_transform(rgl_matrix_top(&ctx->transform.projection), v->eye, v->clip);
+    v->fog_z = fabsf(v->eye[3] != 0.0f ? v->eye[2] / v->eye[3] : v->eye[2]);
     if (ctx->enable.lighting || rgl_texgen_needs_normal(ctx))
         eye_normal(ctx, v->normal);
     else

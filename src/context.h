@@ -217,6 +217,15 @@ struct rgl_material {
     GLfloat color_indexes[3];
 };
 
+struct rgl_fog {
+    GLenum mode;
+    GLfloat density;
+    GLfloat start;
+    GLfloat end;
+    GLfloat index;
+    GLfloat color[4];
+};
+
 struct rgl_lighting {
     GLenum shade_model;
     struct rgl_light light[RGL_MAX_LIGHTS];
@@ -246,6 +255,7 @@ struct rgl_vertex {
     GLboolean edge_flag;
     GLfloat window[3];
     GLfloat inv_w;
+    GLfloat fog_z;
 };
 
 struct rgl_primitive {
@@ -276,6 +286,7 @@ struct rgl_context {
     struct rgl_line line;
     struct rgl_polygon polygon;
     struct rgl_lighting lighting;
+    struct rgl_fog fog;
     struct rgl_current_values current;
     struct rgl_primitive primitive;
 };

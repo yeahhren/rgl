@@ -147,6 +147,7 @@ void rgl_write_fragment(rgl_context *ctx, const struct rgl_fragment *frag) {
     GLfloat color[4];
     memcpy(color, frag->color, sizeof(color));
     rgl_texture_fragment(ctx, frag, color);
+    rgl_fog_fragment(ctx, frag, color);
 
     if (ctx->enable.alpha_test &&
         !compare(ctx->color_buffer.alpha_func, rgl_clampf(color[3], 0.0f, 1.0f), ctx->color_buffer.alpha_ref))

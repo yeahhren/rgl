@@ -61,6 +61,7 @@ void rgl_raster_line(rgl_context *ctx, const struct rgl_vertex *a, const struct 
         const GLfloat sum = wa + wb;
 
         frag.z = a->window[2] + t * (b->window[2] - a->window[2]);
+        frag.fog_z = (wa * a->fog_z + wb * b->fog_z) / sum;
         for (int k = 0; k < 4; k++) {
             frag.color[k] = flat_color ? flat_color[k] : (wa * a->color[k] + wb * b->color[k]) / sum;
             frag.tex_coord[k] = (wa * a->tex_coord[k] + wb * b->tex_coord[k]) / sum;

@@ -145,6 +145,7 @@ static void triangle(rgl_context *ctx, const struct rgl_vertex *v0, const struct
                 frag.x = px;
                 frag.y = py;
                 frag.z = (GLfloat) (l0 * v[0]->window[2] + l1 * v[1]->window[2] + l2 * v[2]->window[2]);
+                frag.fog_z = (GLfloat) ((p0 * v[0]->fog_z + p1 * v[1]->fog_z + p2 * v[2]->fog_z) / sum);
                 for (int k = 0; k < 4; k++) {
                     frag.color[k] = flat_color
                                         ? flat_color[k]

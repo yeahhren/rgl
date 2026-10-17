@@ -40,11 +40,12 @@ static int load_texture(const struct png_image *image, GLfloat *s_max, GLfloat *
 }
 
 static void draw(const struct png_image *image, const GLfloat s_max, const GLfloat t_max) {
+    static const GLfloat fog_color[4] = {0.1f, 0.1f, 0.12f, 1.0f};
     const GLfloat aspect = (GLfloat) WIDTH / (GLfloat) HEIGHT;
     const GLfloat x = 1.2f;
     const GLfloat y = x * (GLfloat) image->height / (GLfloat) image->width;
 
-    glClearColor(0.1f, 0.1f, 0.12f, 1.0f);
+    glClearColor(fog_color[0], fog_color[1], fog_color[2], fog_color[3]);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glMatrixMode(GL_PROJECTION);
@@ -55,6 +56,12 @@ static void draw(const struct png_image *image, const GLfloat s_max, const GLflo
     glTranslatef(0.0f, 0.0f, -2.4f);
     glRotatef(-25.0f, 0.0f, 1.0f, 0.0f);
 
+    glFogi(GL_FOG_MODE, GL_LINEAR);
+    glFogf(GL_FOG_START, 1.8f);
+    glFogf(GL_FOG_END, 3.6f);
+    glFogfv(GL_FOG_COLOR, fog_color);
+
+    glEnable(GL_FOG);
     glEnable(GL_TEXTURE_2D);
     glBegin(GL_QUADS);
     glTexCoord2f(0.0f, 0.0f);
@@ -67,6 +74,7 @@ static void draw(const struct png_image *image, const GLfloat s_max, const GLflo
     glVertex2f(-x, y);
     glEnd();
     glDisable(GL_TEXTURE_2D);
+    glDisable(GL_FOG);
 }
 
 int main(const int argc, char **argv) {

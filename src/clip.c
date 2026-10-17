@@ -45,6 +45,7 @@ static void interpolate(struct rgl_vertex *out, const struct rgl_vertex *a, cons
     lerp(out->back_color, a->back_color, b->back_color, t, 4);
     lerp(out->tex_coord, a->tex_coord, b->tex_coord, t, 4);
     lerp(out->normal, a->normal, b->normal, t, 3);
+    out->fog_z = a->fog_z + t * (b->fog_z - a->fog_z);
 }
 
 static void to_window(const rgl_context *ctx, struct rgl_vertex *v) {

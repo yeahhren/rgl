@@ -17,6 +17,7 @@ void rgl_raster_point(rgl_context *ctx, const struct rgl_vertex *v, const GLfloa
 
     struct rgl_fragment frag;
     frag.z = v->window[2];
+    frag.fog_z = v->fog_z;
     memcpy(frag.color, color, sizeof(frag.color));
     memcpy(frag.tex_coord, v->tex_coord, sizeof(frag.tex_coord));
     memset(frag.tex_dx, 0, sizeof(frag.tex_dx));

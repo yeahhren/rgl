@@ -78,6 +78,10 @@ static void init_state(rgl_context *ctx) {
 
     rgl_init_lighting(ctx);
     rgl_init_texture(ctx);
+
+    ctx->fog.mode = GL_EXP;
+    ctx->fog.density = 1.0f;
+    ctx->fog.end = 1.0f;
 }
 
 rgl_context *rgl_create_context(const GLsizei width, const GLsizei height) {

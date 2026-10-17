@@ -11,6 +11,7 @@ struct rgl_fragment {
     GLfloat tex_coord[4];
     GLfloat tex_dx[2];
     GLfloat tex_dy[2];
+    GLfloat fog_z;
 };
 
 void rgl_light_vertex(rgl_context *ctx, struct rgl_vertex *v);
@@ -33,6 +34,7 @@ void rgl_raster_polygon(rgl_context *ctx, struct rgl_vertex *vertices, size_t co
 GLint rgl_integer_width(GLfloat width, GLint max);
 GLboolean rgl_texturing_enabled(const rgl_context *ctx);
 void rgl_texture_fragment(rgl_context *ctx, const struct rgl_fragment *frag, GLfloat color[4]);
+void rgl_fog_fragment(const rgl_context *ctx, const struct rgl_fragment *frag, GLfloat color[4]);
 void rgl_write_fragment(rgl_context *ctx, const struct rgl_fragment *frag);
 
 #endif
