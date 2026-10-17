@@ -1,4 +1,5 @@
 #include "context.h"
+#include "list.h"
 
 #include <math.h>
 
@@ -12,6 +13,8 @@ static GLfloat from_accum(const GLshort v) {
 
 void glAccum(const GLenum op, const GLfloat value) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_ACCUM, {.e = op}, {.f = value}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     if (op < GL_ACCUM || op > GL_ADD) {

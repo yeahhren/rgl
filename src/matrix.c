@@ -1,4 +1,5 @@
 #include "context.h"
+#include "list.h"
 
 #include <math.h>
 #include <string.h>
@@ -49,6 +50,11 @@ static GLfloat *current_top(rgl_context *ctx) {
 
 static void mult_current(const GLfloat n[16]) {
     GET_CONTEXT(ctx);
+    union rgl_list_arg args[16];
+    for (int k = 0; k < 16; k++)
+        args[0 + k].f = n[k];
+    if (rgl_save(ctx, RGL_OP_MULT_MATRIX, args, 16, NULL))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     multiply(current_top(ctx), n);
@@ -61,6 +67,8 @@ static void to_float(const GLdouble *in, GLfloat out[16]) {
 
 void glMatrixMode(const GLenum mode) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_MATRIX_MODE, {.e = mode}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     if (mode != GL_MODELVIEW && mode != GL_PROJECTION && mode != GL_TEXTURE) {
@@ -72,6 +80,8 @@ void glMatrixMode(const GLenum mode) {
 
 void glLoadIdentity(void) {
     GET_CONTEXT(ctx);
+    if (SAVE0(ctx, RGL_OP_LOAD_IDENTITY))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     rgl_matrix_identity(current_top(ctx));
@@ -79,6 +89,11 @@ void glLoadIdentity(void) {
 
 void glLoadMatrixf(const GLfloat *m) {
     GET_CONTEXT(ctx);
+    union rgl_list_arg args[16];
+    for (int k = 0; k < 16; k++)
+        args[0 + k].f = m[k];
+    if (rgl_save(ctx, RGL_OP_LOAD_MATRIX, args, 16, NULL))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     memcpy(current_top(ctx), m, 16 * sizeof(*m));
@@ -160,6 +175,8 @@ void glScaled(const GLdouble x, const GLdouble y, const GLdouble z) {
 void glFrustum(const GLdouble left, const GLdouble right, const GLdouble bottom, const GLdouble top,
                const GLdouble zNear, const GLdouble zFar) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_FRUSTUM, {.d = left}, {.d = right}, {.d = bottom}, {.d = top}, {.d = zNear}, {.d = zFar}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     if (zNear <= 0.0 || zFar <= 0.0 || left == right || bottom == top || zNear == zFar) {
@@ -181,6 +198,8 @@ void glFrustum(const GLdouble left, const GLdouble right, const GLdouble bottom,
 void glOrtho(const GLdouble left, const GLdouble right, const GLdouble bottom, const GLdouble top,
              const GLdouble zNear, const GLdouble zFar) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_ORTHO, {.d = left}, {.d = right}, {.d = bottom}, {.d = top}, {.d = zNear}, {.d = zFar}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     if (left == right || bottom == top || zNear == zFar) {
@@ -201,6 +220,8 @@ void glOrtho(const GLdouble left, const GLdouble right, const GLdouble bottom, c
 
 void glPushMatrix(void) {
     GET_CONTEXT(ctx);
+    if (SAVE0(ctx, RGL_OP_PUSH_MATRIX))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     struct rgl_matrix_stack *stack = current_stack(ctx);
@@ -214,6 +235,8 @@ void glPushMatrix(void) {
 
 void glPopMatrix(void) {
     GET_CONTEXT(ctx);
+    if (SAVE0(ctx, RGL_OP_POP_MATRIX))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     struct rgl_matrix_stack *stack = current_stack(ctx);

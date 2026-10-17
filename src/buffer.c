@@ -1,4 +1,5 @@
 #include "context.h"
+#include "list.h"
 
 static GLboolean is_missing_buffer(const GLenum mode) {
     switch (mode) {
@@ -19,6 +20,8 @@ static GLboolean is_missing_buffer(const GLenum mode) {
 
 void glDrawBuffer(const GLenum mode) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_DRAW_BUFFER, {.e = mode}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     switch (mode) {
@@ -37,6 +40,8 @@ void glDrawBuffer(const GLenum mode) {
 
 void glReadBuffer(const GLenum mode) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_READ_BUFFER, {.e = mode}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     switch (mode) {

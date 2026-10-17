@@ -1,4 +1,5 @@
 #include "pipeline.h"
+#include "list.h"
 
 #include <math.h>
 #include <string.h>
@@ -193,6 +194,8 @@ void rgl_write_stencil(rgl_context *ctx, const GLint x, const GLint y, const GLu
 
 void glAlphaFunc(const GLenum func, const GLclampf ref) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_ALPHA_FUNC, {.e = func}, {.f = ref}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     if (!is_compare_func(func)) {
@@ -205,6 +208,8 @@ void glAlphaFunc(const GLenum func, const GLclampf ref) {
 
 void glStencilFunc(const GLenum func, const GLint ref, const GLuint mask) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_STENCIL_FUNC, {.e = func}, {.i = ref}, {.u = mask}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     if (!is_compare_func(func)) {
@@ -223,6 +228,8 @@ static GLboolean is_stencil_op(const GLenum op) {
 
 void glStencilOp(const GLenum fail, const GLenum zfail, const GLenum zpass) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_STENCIL_OP, {.e = fail}, {.e = zfail}, {.e = zpass}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     if (!is_stencil_op(fail) || !is_stencil_op(zfail) || !is_stencil_op(zpass)) {
@@ -236,6 +243,8 @@ void glStencilOp(const GLenum fail, const GLenum zfail, const GLenum zpass) {
 
 void glDepthFunc(const GLenum func) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_DEPTH_FUNC, {.e = func}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     if (!is_compare_func(func)) {
@@ -252,6 +261,8 @@ static GLboolean is_blend_common(const GLenum factor) {
 
 void glBlendFunc(const GLenum sfactor, const GLenum dfactor) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_BLEND_FUNC, {.e = sfactor}, {.e = dfactor}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     const GLboolean src_ok = is_blend_common(sfactor) || sfactor == GL_DST_COLOR ||
@@ -267,6 +278,8 @@ void glBlendFunc(const GLenum sfactor, const GLenum dfactor) {
 
 void glLogicOp(const GLenum opcode) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_LOGIC_OP, {.e = opcode}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     if (opcode < GL_CLEAR || opcode > GL_SET) {

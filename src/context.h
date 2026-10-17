@@ -19,6 +19,8 @@
 #define RGL_MAX_PIXEL_MAP_TABLE 256
 #define RGL_PIXEL_MAPS 10
 
+#define RGL_MAX_LIST_NESTING 64
+
 #define RGL_MAX_POINT_SIZE 64
 #define RGL_MAX_LINE_WIDTH 64
 
@@ -310,6 +312,27 @@ struct rgl_primitive {
     size_t clip_capacity;
 };
 
+struct rgl_list_node;
+
+struct rgl_display_list {
+    GLuint name;
+    struct rgl_list_node *nodes;
+    size_t count;
+};
+
+struct rgl_list_state {
+    struct rgl_display_list *lists;
+    size_t count;
+    size_t capacity;
+    GLuint base;
+    GLuint compiling;
+    GLenum mode;
+    struct rgl_list_node *build;
+    size_t build_count;
+    size_t build_capacity;
+    GLint depth;
+};
+
 struct rgl_context {
     GLenum error;
     GLboolean in_begin_end;
@@ -332,6 +355,7 @@ struct rgl_context {
     struct rgl_fog fog;
     struct rgl_current_values current;
     struct rgl_raster_pos raster;
+    struct rgl_list_state list;
     struct rgl_primitive primitive;
 };
 
@@ -355,6 +379,7 @@ const GLfloat *rgl_modelview_inverse(rgl_context *ctx);
 void rgl_init_lighting(rgl_context *ctx);
 void rgl_init_texture(rgl_context *ctx);
 void rgl_free_texture(rgl_context *ctx);
+void rgl_free_lists(rgl_context *ctx);
 void rgl_update_color_material(rgl_context *ctx);
 
 #define GET_CONTEXT(ctx) \

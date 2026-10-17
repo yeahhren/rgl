@@ -1,4 +1,5 @@
 #include "pipeline.h"
+#include "list.h"
 #include "pixel.h"
 
 #include <math.h>
@@ -329,6 +330,13 @@ static void tex_image(rgl_context *ctx, const GLenum target, const GLint level, 
 void glTexImage1D(const GLenum target, const GLint level, const GLint components, const GLsizei width,
                   const GLint border, const GLenum format, const GLenum type, const GLvoid *pixels) {
     GET_CONTEXT(ctx);
+    if (rgl_list_compiling(ctx)) {
+        const union rgl_list_arg args[7] = {{.e = target}, {.i = level}, {.i = components}, {.i = width},
+                                            {.i = border}, {.e = format}, {.e = type}};
+        if (rgl_save(ctx, RGL_OP_TEX_IMAGE_1D, args, 7,
+                     rgl_copy_image(&ctx->pixel.unpack, width, 1, format, type, pixels)))
+            return;
+    }
     OUTSIDE_BEGIN_END(ctx);
 
     if (target != GL_TEXTURE_1D) {
@@ -342,6 +350,13 @@ void glTexImage2D(const GLenum target, const GLint level, const GLint components
                   const GLsizei height, const GLint border, const GLenum format, const GLenum type,
                   const GLvoid *pixels) {
     GET_CONTEXT(ctx);
+    if (rgl_list_compiling(ctx)) {
+        const union rgl_list_arg args[8] = {{.e = target}, {.i = level}, {.i = components}, {.i = width},
+                                            {.i = height}, {.i = border}, {.e = format}, {.e = type}};
+        if (rgl_save(ctx, RGL_OP_TEX_IMAGE_2D, args, 8,
+                     rgl_copy_image(&ctx->pixel.unpack, width, height, format, type, pixels)))
+            return;
+    }
     OUTSIDE_BEGIN_END(ctx);
 
     if (target != GL_TEXTURE_2D) {
@@ -353,6 +368,11 @@ void glTexImage2D(const GLenum target, const GLint level, const GLint components
 
 void glTexParameterfv(const GLenum target, const GLenum pname, const GLfloat *params) {
     GET_CONTEXT(ctx);
+    union rgl_list_arg args[6] = {{.e = target}, {.e = pname}};
+    for (int k = 0; k < (pname == GL_TEXTURE_BORDER_COLOR ? 4 : 1); k++)
+        args[2 + k].f = params[k];
+    if (rgl_save(ctx, RGL_OP_TEX_PARAMETER, args, 6, NULL))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     struct rgl_texture *tex = texture_for(ctx, target);
@@ -471,6 +491,11 @@ void glGetTexParameteriv(const GLenum target, const GLenum pname, GLint *params)
 
 void glTexEnvfv(const GLenum target, const GLenum pname, const GLfloat *params) {
     GET_CONTEXT(ctx);
+    union rgl_list_arg args[6] = {{.e = target}, {.e = pname}};
+    for (int k = 0; k < (pname == GL_TEXTURE_ENV_COLOR ? 4 : 1); k++)
+        args[2 + k].f = params[k];
+    if (rgl_save(ctx, RGL_OP_TEX_ENV, args, 6, NULL))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     if (target == GL_TEXTURE_ENV) {

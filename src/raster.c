@@ -1,4 +1,5 @@
 #include "pipeline.h"
+#include "list.h"
 #include "pixel.h"
 
 #include <math.h>
@@ -20,6 +21,8 @@ void rgl_init_raster_fragment(const rgl_context *ctx, struct rgl_fragment *frag)
 
 static void raster_pos(const GLfloat x, const GLfloat y, const GLfloat z, const GLfloat w) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_RASTER_POS, {.f = x}, {.f = y}, {.f = z}, {.f = w}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     struct rgl_vertex v;
@@ -43,6 +46,13 @@ static void raster_pos(const GLfloat x, const GLfloat y, const GLfloat z, const 
 void glBitmap(const GLsizei width, const GLsizei height, const GLfloat xorig, const GLfloat yorig,
               const GLfloat xmove, const GLfloat ymove, const GLubyte *bitmap) {
     GET_CONTEXT(ctx);
+    if (rgl_list_compiling(ctx)) {
+        const union rgl_list_arg args[6] = {{.i = width}, {.i = height}, {.f = xorig}, {.f = yorig}, {.f = xmove},
+                                            {.f = ymove}};
+        if (rgl_save(ctx, RGL_OP_BITMAP, args, 6,
+                     rgl_copy_image(&ctx->pixel.unpack, width, height, GL_COLOR_INDEX, GL_BITMAP, bitmap)))
+            return;
+    }
     OUTSIDE_BEGIN_END(ctx);
 
     if (width < 0 || height < 0) {

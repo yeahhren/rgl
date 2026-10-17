@@ -16,6 +16,7 @@ add_library(rgl STATIC
         src/fog.c
         src/fragment.c
         src/light.c
+        src/list.c
         src/line.c
         src/matrix.c
         src/pixel.c

@@ -1,4 +1,5 @@
 #include "pipeline.h"
+#include "list.h"
 
 #include <math.h>
 #include <stdlib.h>
@@ -48,6 +49,8 @@ void rgl_transform_vertex(rgl_context *ctx, const GLfloat object[4], struct rgl_
 
 static void vertex(const GLfloat x, const GLfloat y, const GLfloat z, const GLfloat w) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_VERTEX, {.f = x}, {.f = y}, {.f = z}, {.f = w}))
+        return;
     if (!ctx->in_begin_end)
         return;
 
@@ -65,6 +68,8 @@ static void vertex(const GLfloat x, const GLfloat y, const GLfloat z, const GLfl
 
 void glBegin(const GLenum mode) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_BEGIN, {.e = mode}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     if (mode > GL_POLYGON) {
@@ -78,6 +83,8 @@ void glBegin(const GLenum mode) {
 
 void glEnd(void) {
     GET_CONTEXT(ctx);
+    if (SAVE0(ctx, RGL_OP_END))
+        return;
 
     if (!ctx->in_begin_end) {
         rgl_error(ctx, GL_INVALID_OPERATION);

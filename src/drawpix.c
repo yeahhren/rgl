@@ -1,4 +1,5 @@
 #include "pipeline.h"
+#include "list.h"
 #include "pixel.h"
 
 #include <math.h>
@@ -131,6 +132,12 @@ static GLboolean valid_type(const GLenum format, const GLenum type) {
 void glDrawPixels(const GLsizei width, const GLsizei height, const GLenum format, const GLenum type,
                   const GLvoid *pixels) {
     GET_CONTEXT(ctx);
+    if (rgl_list_compiling(ctx)) {
+        const union rgl_list_arg args[4] = {{.i = width}, {.i = height}, {.e = format}, {.e = type}};
+        if (rgl_save(ctx, RGL_OP_DRAW_PIXELS, args, 4,
+                     rgl_copy_image(&ctx->pixel.unpack, width, height, format, type, pixels)))
+            return;
+    }
     OUTSIDE_BEGIN_END(ctx);
 
     if (!valid_format(format) || !valid_type(format, type)) {
@@ -230,6 +237,8 @@ void glReadPixels(const GLint x, const GLint y, const GLsizei width, const GLsiz
 
 void glCopyPixels(const GLint x, const GLint y, const GLsizei width, const GLsizei height, const GLenum type) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_COPY_PIXELS, {.i = x}, {.i = y}, {.i = width}, {.i = height}, {.e = type}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     if (type != GL_COLOR && type != GL_DEPTH && type != GL_STENCIL) {

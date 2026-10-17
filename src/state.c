@@ -1,4 +1,5 @@
 #include "context.h"
+#include "list.h"
 
 static GLboolean *cap_flag(rgl_context *ctx, const GLenum cap) {
     struct rgl_enable *e = &ctx->enable;
@@ -62,6 +63,8 @@ static GLboolean *cap_flag(rgl_context *ctx, const GLenum cap) {
 
 static void set_cap(const GLenum cap, const GLboolean value) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, value ? RGL_OP_ENABLE : RGL_OP_DISABLE, {.e = cap}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     GLboolean *flag = cap_flag(ctx, cap);
@@ -134,6 +137,8 @@ void glFinish(void) {
 
 void glViewport(const GLint x, const GLint y, const GLsizei width, const GLsizei height) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_VIEWPORT, {.i = x}, {.i = y}, {.i = width}, {.i = height}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     if (width < 0 || height < 0) {
@@ -148,6 +153,8 @@ void glViewport(const GLint x, const GLint y, const GLsizei width, const GLsizei
 
 void glDepthRange(const GLclampd zNear, const GLclampd zFar) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_DEPTH_RANGE, {.d = zNear}, {.d = zFar}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     ctx->viewport.z_near = rgl_clampd(zNear, 0.0, 1.0);
@@ -156,6 +163,8 @@ void glDepthRange(const GLclampd zNear, const GLclampd zFar) {
 
 void glScissor(const GLint x, const GLint y, const GLsizei width, const GLsizei height) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_SCISSOR, {.i = x}, {.i = y}, {.i = width}, {.i = height}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     if (width < 0 || height < 0) {
@@ -170,6 +179,8 @@ void glScissor(const GLint x, const GLint y, const GLsizei width, const GLsizei 
 
 void glColorMask(const GLboolean red, const GLboolean green, const GLboolean blue, const GLboolean alpha) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_COLOR_MASK, {.i = red}, {.i = green}, {.i = blue}, {.i = alpha}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     ctx->mask.color[0] = red ? GL_TRUE : GL_FALSE;
@@ -180,6 +191,8 @@ void glColorMask(const GLboolean red, const GLboolean green, const GLboolean blu
 
 void glIndexMask(const GLuint mask) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_INDEX_MASK, {.u = mask}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     ctx->mask.index = mask;
@@ -187,6 +200,8 @@ void glIndexMask(const GLuint mask) {
 
 void glDepthMask(const GLboolean flag) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_DEPTH_MASK, {.i = flag}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     ctx->mask.depth = flag ? GL_TRUE : GL_FALSE;
@@ -194,6 +209,8 @@ void glDepthMask(const GLboolean flag) {
 
 void glStencilMask(const GLuint mask) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_STENCIL_MASK, {.u = mask}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     ctx->mask.stencil = mask;

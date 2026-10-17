@@ -135,6 +135,7 @@ void rgl_destroy_context(rgl_context *ctx) {
     free(ctx->primitive.clip[0]);
     free(ctx->primitive.clip[1]);
     rgl_free_texture(ctx);
+    rgl_free_lists(ctx);
     free(ctx);
 }
 

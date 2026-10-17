@@ -1,4 +1,5 @@
 #include "pixel.h"
+#include "list.h"
 
 #include <math.h>
 #include <stdlib.h>
@@ -217,6 +218,44 @@ static void pack_components(const struct rgl_pixel_store *store, const GLsizei w
         for (GLsizei x = 0; x < width * n; x++, p += size)
             write_value(p, type, *values++, store->swap_bytes, normalize);
     }
+}
+
+GLvoid *rgl_copy_image(const struct rgl_pixel_store *store, const GLsizei width, const GLsizei height,
+                       const GLenum format, const GLenum type, const GLvoid *pixels) {
+    if (pixels == NULL || width <= 0 || height <= 0 || (type != GL_BITMAP && !rgl_is_numeric_type(type)))
+        return NULL;
+
+    if (type == GL_BITMAP) {
+        const struct rgl_pixel_store tight = {.alignment = 1};
+        GLubyte *out = calloc(((size_t) width + 7) / 8 * (size_t) height, 1);
+        if (out == NULL)
+            return NULL;
+        for (GLsizei y = 0; y < height; y++) {
+            for (GLsizei x = 0; x < width; x++)
+                write_bit(&tight, width, out, x, y, read_bit(store, width, pixels, x, y));
+        }
+        return out;
+    }
+
+    const int n = format_components(format);
+    const size_t size = type_size(type);
+    const size_t stride = row_stride(store, width, n, size);
+    const size_t row = (size_t) width * (size_t) n * size;
+    const GLubyte *base = (const GLubyte *) pixels + (size_t) store->skip_rows * stride +
+                          (size_t) store->skip_pixels * (size_t) n * size;
+
+    GLubyte *out = malloc(row * (size_t) height);
+    if (out == NULL)
+        return NULL;
+    for (GLsizei y = 0; y < height; y++) {
+        GLubyte *dst = out + (size_t) y * row;
+        memcpy(dst, base + (size_t) y * stride, row);
+        if (store->swap_bytes) {
+            for (size_t i = 0; i < row; i += size)
+                swap_bytes(dst + i, size);
+        }
+    }
+    return out;
 }
 
 static GLfloat shift_index(const struct rgl_pixel_transfer *t, const GLfloat index) {
@@ -478,6 +517,8 @@ void glPixelStoref(const GLenum pname, const GLfloat param) {
 
 void glPixelTransferf(const GLenum pname, const GLfloat param) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_PIXEL_TRANSFER, {.e = pname}, {.f = param}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     struct rgl_pixel_transfer *t = &ctx->pixel.transfer;
@@ -548,6 +589,15 @@ static struct rgl_pixel_map *pixel_map(rgl_context *ctx, const GLenum map) {
 
 static void pixel_map_values(const GLenum map, const GLsizei mapsize, const GLfloat *values) {
     GET_CONTEXT(ctx);
+    if (rgl_list_compiling(ctx)) {
+        const GLsizei size = mapsize < 0 ? 0 : mapsize > RGL_MAX_PIXEL_MAP_TABLE ? RGL_MAX_PIXEL_MAP_TABLE : mapsize;
+        GLfloat *copy = malloc(((size_t) size + 1) * sizeof(*copy));
+        if (copy != NULL)
+            memcpy(copy, values, (size_t) size * sizeof(*copy));
+        const union rgl_list_arg args[2] = {{.e = map}, {.i = mapsize}};
+        if (rgl_save(ctx, RGL_OP_PIXEL_MAP, args, 2, copy))
+            return;
+    }
     OUTSIDE_BEGIN_END(ctx);
 
     struct rgl_pixel_map *m = pixel_map(ctx, map);
@@ -624,6 +674,8 @@ void glGetPixelMapusv(const GLenum map, GLushort *values) {
 
 void glPixelZoom(const GLfloat xfactor, const GLfloat yfactor) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_PIXEL_ZOOM, {.f = xfactor}, {.f = yfactor}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     ctx->pixel.zoom_x = xfactor;

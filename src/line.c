@@ -1,4 +1,5 @@
 #include "pipeline.h"
+#include "list.h"
 
 #include <math.h>
 #include <string.h>
@@ -87,6 +88,8 @@ void rgl_raster_line(rgl_context *ctx, const struct rgl_vertex *a, const struct 
 
 void glLineWidth(const GLfloat width) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_LINE_WIDTH, {.f = width}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     if (width <= 0.0f) {
@@ -98,6 +101,8 @@ void glLineWidth(const GLfloat width) {
 
 void glLineStipple(const GLint factor, const GLushort pattern) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_LINE_STIPPLE, {.i = factor}, {.u = pattern}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     ctx->line.stipple_factor = factor < 1 ? 1 : factor > 256 ? 256 : factor;

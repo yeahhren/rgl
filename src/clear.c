@@ -1,4 +1,5 @@
 #include "context.h"
+#include "list.h"
 
 #include <math.h>
 #include <string.h>
@@ -76,6 +77,8 @@ static void clear_stencil(const rgl_context *ctx, const struct rgl_rect r) {
 
 void glClear(const GLbitfield mask) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_CLEAR, {.u = mask}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     if (mask & ~CLEAR_BITS) {
@@ -99,6 +102,8 @@ void glClear(const GLbitfield mask) {
 
 void glClearColor(const GLclampf red, const GLclampf green, const GLclampf blue, const GLclampf alpha) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_CLEAR_COLOR, {.f = red}, {.f = green}, {.f = blue}, {.f = alpha}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     ctx->clear.color[0] = rgl_clampf(red, 0.0f, 1.0f);
@@ -109,6 +114,8 @@ void glClearColor(const GLclampf red, const GLclampf green, const GLclampf blue,
 
 void glClearIndex(const GLfloat c) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_CLEAR_INDEX, {.f = c}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     ctx->clear.index = c;
@@ -116,6 +123,8 @@ void glClearIndex(const GLfloat c) {
 
 void glClearDepth(const GLclampd depth) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_CLEAR_DEPTH, {.d = depth}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     ctx->clear.depth = rgl_clampd(depth, 0.0, 1.0);
@@ -123,6 +132,8 @@ void glClearDepth(const GLclampd depth) {
 
 void glClearStencil(const GLint s) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_CLEAR_STENCIL, {.i = s}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     ctx->clear.stencil = s;
@@ -130,6 +141,8 @@ void glClearStencil(const GLint s) {
 
 void glClearAccum(const GLfloat red, const GLfloat green, const GLfloat blue, const GLfloat alpha) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_CLEAR_ACCUM, {.f = red}, {.f = green}, {.f = blue}, {.f = alpha}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     ctx->clear.accum[0] = rgl_clampf(red, -1.0f, 1.0f);

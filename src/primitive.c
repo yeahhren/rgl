@@ -1,4 +1,5 @@
 #include "pipeline.h"
+#include "list.h"
 
 #include <stdlib.h>
 
@@ -96,6 +97,8 @@ void rgl_render_primitive(rgl_context *ctx) {
 
 void glShadeModel(const GLenum mode) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_SHADE_MODEL, {.e = mode}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     if (mode != GL_FLAT && mode != GL_SMOOTH) {

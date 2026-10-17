@@ -1,4 +1,6 @@
 #include "pipeline.h"
+#include "list.h"
+#include "pixel.h"
 
 #include <math.h>
 #include <stdint.h>
@@ -210,6 +212,8 @@ void rgl_raster_polygon(rgl_context *ctx, struct rgl_vertex *vertices, const siz
 
 void glPolygonMode(const GLenum face, const GLenum mode) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_POLYGON_MODE, {.e = face}, {.e = mode}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     if ((face != GL_FRONT && face != GL_BACK && face != GL_FRONT_AND_BACK) ||
@@ -225,6 +229,8 @@ void glPolygonMode(const GLenum face, const GLenum mode) {
 
 void glCullFace(const GLenum mode) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_CULL_FACE, {.e = mode}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     if (mode != GL_FRONT && mode != GL_BACK && mode != GL_FRONT_AND_BACK) {
@@ -236,6 +242,8 @@ void glCullFace(const GLenum mode) {
 
 void glFrontFace(const GLenum mode) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_FRONT_FACE, {.e = mode}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     if (mode != GL_CW && mode != GL_CCW) {
@@ -248,14 +256,27 @@ void glFrontFace(const GLenum mode) {
 // assumes default unpack state until `glPixelStore` is called
 void glPolygonStipple(const GLubyte *mask) {
     GET_CONTEXT(ctx);
+    if (rgl_list_compiling(ctx) &&
+        rgl_save(ctx, RGL_OP_POLYGON_STIPPLE, NULL, 0,
+                 rgl_copy_image(&ctx->pixel.unpack, 32, 32, GL_COLOR_INDEX, GL_BITMAP, mask)))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
-    memcpy(ctx->polygon.stipple, mask, sizeof(ctx->polygon.stipple));
+    GLubyte bits[32 * 32];
+    rgl_unpack_bitmap(&ctx->pixel.unpack, 32, 32, mask, bits);
+    memset(ctx->polygon.stipple, 0, sizeof(ctx->polygon.stipple));
+    for (int i = 0; i < 32 * 32; i++) {
+        if (bits[i])
+            ctx->polygon.stipple[i / 8] = (GLubyte) (ctx->polygon.stipple[i / 8] | 0x80u >> (i % 8));
+    }
 }
 
 void glGetPolygonStipple(GLubyte *mask) {
     GET_CONTEXT(ctx);
     OUTSIDE_BEGIN_END(ctx);
 
-    memcpy(mask, ctx->polygon.stipple, sizeof(ctx->polygon.stipple));
+    GLuint bits[32 * 32];
+    for (int i = 0; i < 32 * 32; i++)
+        bits[i] = ctx->polygon.stipple[i / 8] >> (7 - i % 8) & 1u;
+    rgl_pack_index(&ctx->pixel.pack, 32, 32, GL_BITMAP, bits, mask);
 }

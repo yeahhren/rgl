@@ -1,4 +1,5 @@
 #include "pipeline.h"
+#include "list.h"
 
 #include <math.h>
 #include <string.h>
@@ -34,6 +35,8 @@ void rgl_raster_point(rgl_context *ctx, const struct rgl_vertex *v, const GLfloa
 
 void glPointSize(const GLfloat size) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_POINT_SIZE, {.f = size}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     if (size <= 0.0f) {

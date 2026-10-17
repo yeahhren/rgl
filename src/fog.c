@@ -1,4 +1,5 @@
 #include "pipeline.h"
+#include "list.h"
 
 #include <math.h>
 
@@ -28,6 +29,11 @@ void rgl_fog_fragment(const rgl_context *ctx, const struct rgl_fragment *frag, G
 
 void glFogfv(const GLenum pname, const GLfloat *params) {
     GET_CONTEXT(ctx);
+    union rgl_list_arg args[5] = {{.e = pname}};
+    for (int k = 0; k < (pname == GL_FOG_COLOR ? 4 : 1); k++)
+        args[1 + k].f = params[k];
+    if (rgl_save(ctx, RGL_OP_FOG, args, 5, NULL))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     struct rgl_fog *fog = &ctx->fog;

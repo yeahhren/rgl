@@ -1,4 +1,5 @@
 #include "context.h"
+#include "list.h"
 
 static GLfloat byte_to_float(const GLbyte c) {
     return (2.0f * (GLfloat) c + 1.0f) / 255.0f;
@@ -22,6 +23,8 @@ static GLfloat uint_to_float(const GLuint c) {
 
 static void set_color(const GLfloat red, const GLfloat green, const GLfloat blue, const GLfloat alpha) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_COLOR, {.f = red}, {.f = green}, {.f = blue}, {.f = alpha}))
+        return;
 
     ctx->current.color[0] = red;
     ctx->current.color[1] = green;
@@ -32,6 +35,8 @@ static void set_color(const GLfloat red, const GLfloat green, const GLfloat blue
 
 static void set_normal(const GLfloat nx, const GLfloat ny, const GLfloat nz) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_NORMAL, {.f = nx}, {.f = ny}, {.f = nz}))
+        return;
 
     ctx->current.normal[0] = nx;
     ctx->current.normal[1] = ny;
@@ -40,12 +45,16 @@ static void set_normal(const GLfloat nx, const GLfloat ny, const GLfloat nz) {
 
 static void set_index(const GLfloat c) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_INDEX, {.f = c}))
+        return;
 
     ctx->current.index = c;
 }
 
 static void set_tex_coord(const GLfloat s, const GLfloat t, const GLfloat r, const GLfloat q) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_TEX_COORD, {.f = s}, {.f = t}, {.f = r}, {.f = q}))
+        return;
 
     ctx->current.tex_coord[0] = s;
     ctx->current.tex_coord[1] = t;
@@ -383,6 +392,8 @@ void glTexCoord4sv(const GLshort *v) {
 
 void glEdgeFlag(const GLboolean flag) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_EDGE_FLAG, {.i = flag}))
+        return;
 
     ctx->current.edge_flag = flag ? GL_TRUE : GL_FALSE;
 }

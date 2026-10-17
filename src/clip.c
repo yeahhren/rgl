@@ -1,4 +1,5 @@
 #include "pipeline.h"
+#include "list.h"
 
 #include <stdlib.h>
 
@@ -191,6 +192,9 @@ void rgl_clip_polygon(rgl_context *ctx, const struct rgl_vertex *const *vertices
 
 void glClipPlane(const GLenum plane, const GLdouble *equation) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_CLIP_PLANE, {.e = plane}, {.d = equation[0]}, {.d = equation[1]}, {.d = equation[2]},
+             {.d = equation[3]}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     if (plane < GL_CLIP_PLANE0 || plane >= GL_CLIP_PLANE0 + RGL_MAX_CLIP_PLANES) {

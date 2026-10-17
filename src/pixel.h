@@ -15,6 +15,9 @@ void rgl_unpack_stencil(const rgl_context *ctx, GLsizei width, GLsizei height, G
 void rgl_unpack_bitmap(const struct rgl_pixel_store *store, GLsizei width, GLsizei height, const GLvoid *bitmap,
                        GLubyte *bits);
 
+GLvoid *rgl_copy_image(const struct rgl_pixel_store *store, GLsizei width, GLsizei height, GLenum format,
+                       GLenum type, const GLvoid *pixels);
+
 void rgl_transfer_rgba(const rgl_context *ctx, GLfloat *rgba, size_t count);
 void rgl_transfer_depth(const rgl_context *ctx, GLfloat *depth, size_t count);
 GLuint rgl_transfer_stencil(const rgl_context *ctx, GLfloat index);

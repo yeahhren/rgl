@@ -1,4 +1,5 @@
 #include "pipeline.h"
+#include "list.h"
 
 #include <math.h>
 #include <string.h>
@@ -223,6 +224,11 @@ static int light_size(const GLenum pname) {
 
 void glLightfv(const GLenum light, const GLenum pname, const GLfloat *params) {
     GET_CONTEXT(ctx);
+    union rgl_list_arg args[6] = {{.e = light}, {.e = pname}};
+    for (int k = 0; k < light_size(pname); k++)
+        args[2 + k].f = params[k];
+    if (rgl_save(ctx, RGL_OP_LIGHT, args, 6, NULL))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     struct rgl_light *l = get_light(ctx, light);
@@ -301,6 +307,11 @@ void glLighti(const GLenum light, const GLenum pname, const GLint param) {
 
 void glLightModelfv(const GLenum pname, const GLfloat *params) {
     GET_CONTEXT(ctx);
+    union rgl_list_arg args[5] = {{.e = pname}};
+    for (int k = 0; k < (pname == GL_LIGHT_MODEL_AMBIENT ? 4 : 1); k++)
+        args[1 + k].f = params[k];
+    if (rgl_save(ctx, RGL_OP_LIGHT_MODEL, args, 5, NULL))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     switch (pname) {
@@ -348,8 +359,17 @@ static GLboolean is_material_color(const GLenum pname) {
            pname == GL_AMBIENT_AND_DIFFUSE;
 }
 
+static int material_size(const GLenum pname) {
+    return is_material_color(pname) ? 4 : pname == GL_COLOR_INDEXES ? 3 : 1;
+}
+
 void glMaterialfv(const GLenum face, const GLenum pname, const GLfloat *params) {
     GET_CONTEXT(ctx);
+    union rgl_list_arg args[6] = {{.e = face}, {.e = pname}};
+    for (int k = 0; k < material_size(pname); k++)
+        args[2 + k].f = params[k];
+    if (rgl_save(ctx, RGL_OP_MATERIAL, args, 6, NULL))
+        return;
 
     if (!is_face(face) || (!is_material_color(pname) && pname != GL_SHININESS && pname != GL_COLOR_INDEXES)) {
         rgl_error(ctx, GL_INVALID_ENUM);
@@ -373,7 +393,7 @@ void glMaterialf(const GLenum face, const GLenum pname, const GLfloat param) {
 
 void glMaterialiv(const GLenum face, const GLenum pname, const GLint *params) {
     GLfloat f[4] = {0};
-    const int n = is_material_color(pname) ? 4 : pname == GL_COLOR_INDEXES ? 3 : 1;
+    const int n = material_size(pname);
     for (int i = 0; i < n; i++)
         f[i] = is_material_color(pname) ? rgl_int_to_float(params[i]) : (GLfloat) params[i];
     glMaterialfv(face, pname, f);
@@ -385,6 +405,8 @@ void glMateriali(const GLenum face, const GLenum pname, const GLint param) {
 
 void glColorMaterial(const GLenum face, const GLenum mode) {
     GET_CONTEXT(ctx);
+    if (SAVE(ctx, RGL_OP_COLOR_MATERIAL, {.e = face}, {.e = mode}))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     if (!is_face(face) || (mode != GL_EMISSION && mode != GL_AMBIENT && mode != GL_DIFFUSE &&

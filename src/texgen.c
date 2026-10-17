@@ -1,4 +1,5 @@
 #include "pipeline.h"
+#include "list.h"
 
 #include <math.h>
 #include <string.h>
@@ -74,6 +75,11 @@ static struct rgl_texgen *texgen_for(rgl_context *ctx, const GLenum coord) {
 
 static void tex_gen(const GLenum coord, const GLenum pname, const GLdouble *params) {
     GET_CONTEXT(ctx);
+    union rgl_list_arg args[6] = {{.e = coord}, {.e = pname}};
+    for (int k = 0; k < (pname == GL_TEXTURE_GEN_MODE ? 1 : 4); k++)
+        args[2 + k].d = params[k];
+    if (rgl_save(ctx, RGL_OP_TEX_GEN, args, 6, NULL))
+        return;
     OUTSIDE_BEGIN_END(ctx);
 
     struct rgl_texgen *g = texgen_for(ctx, coord);
