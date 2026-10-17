@@ -34,8 +34,8 @@ static void write_hit(rgl_context *ctx) {
         return;
 
     select_value(s, (GLuint) s->depth);
-    select_value(s, (GLuint) ((GLdouble) s->min_z * 4294967295.0));
-    select_value(s, (GLuint) ((GLdouble) s->max_z * 4294967295.0));
+    select_value(s, (GLuint) ((GLdouble) s->min_z * 4294967295.0 + 0.5));
+    select_value(s, (GLuint) ((GLdouble) s->max_z * 4294967295.0 + 0.5));
     for (GLint i = 0; i < s->depth; i++)
         select_value(s, s->names[i]);
     s->hits++;
