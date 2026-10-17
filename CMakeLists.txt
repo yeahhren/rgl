@@ -13,6 +13,7 @@ add_library(rgl STATIC
         src/context.c
         src/current.c
         src/drawpix.c
+        src/eval.c
         src/fog.c
         src/fragment.c
         src/light.c

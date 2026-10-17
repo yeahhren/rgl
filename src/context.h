@@ -8,6 +8,7 @@
 #define RGL_MAX_LIGHTS 8
 #define RGL_MAX_CLIP_PLANES 6
 #define RGL_MAX_EVAL_MAPS 9
+#define RGL_MAX_EVAL_ORDER 30
 #define RGL_MAX_VIEWPORT_DIM 4096
 #define RGL_MAX_MODELVIEW_STACK_DEPTH 32
 #define RGL_MAX_PROJECTION_STACK_DEPTH 2
@@ -312,6 +313,37 @@ struct rgl_primitive {
     size_t clip_capacity;
 };
 
+struct rgl_map1 {
+    GLint order;
+    GLfloat u1;
+    GLfloat u2;
+    GLfloat *points;
+};
+
+struct rgl_map2 {
+    GLint uorder;
+    GLint vorder;
+    GLfloat u1;
+    GLfloat u2;
+    GLfloat v1;
+    GLfloat v2;
+    GLfloat *points;
+};
+
+struct rgl_eval {
+    struct rgl_map1 map1[RGL_MAX_EVAL_MAPS];
+    struct rgl_map2 map2[RGL_MAX_EVAL_MAPS];
+    GLint grid1_un;
+    GLfloat grid1_u1;
+    GLfloat grid1_u2;
+    GLint grid2_un;
+    GLint grid2_vn;
+    GLfloat grid2_u1;
+    GLfloat grid2_u2;
+    GLfloat grid2_v1;
+    GLfloat grid2_v2;
+};
+
 struct rgl_list_node;
 
 struct rgl_display_list {
@@ -356,6 +388,7 @@ struct rgl_context {
     struct rgl_current_values current;
     struct rgl_raster_pos raster;
     struct rgl_list_state list;
+    struct rgl_eval eval;
     struct rgl_primitive primitive;
 };
 
@@ -380,6 +413,8 @@ void rgl_init_lighting(rgl_context *ctx);
 void rgl_init_texture(rgl_context *ctx);
 void rgl_free_texture(rgl_context *ctx);
 void rgl_free_lists(rgl_context *ctx);
+void rgl_init_eval(rgl_context *ctx);
+void rgl_free_eval(rgl_context *ctx);
 void rgl_update_color_material(rgl_context *ctx);
 
 #define GET_CONTEXT(ctx) \

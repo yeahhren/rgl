@@ -230,6 +230,24 @@ static void execute_node(rgl_context *ctx, const struct rgl_list_node *n) {
         case RGL_OP_END:
             glEnd();
             break;
+        case RGL_OP_EVAL_COORD1:
+            glEvalCoord1f(a[0].f);
+            break;
+        case RGL_OP_EVAL_COORD2:
+            glEvalCoord2f(a[0].f, a[1].f);
+            break;
+        case RGL_OP_EVAL_MESH1:
+            glEvalMesh1(a[0].e, a[1].i, a[2].i);
+            break;
+        case RGL_OP_EVAL_MESH2:
+            glEvalMesh2(a[0].e, a[1].i, a[2].i, a[3].i, a[4].i);
+            break;
+        case RGL_OP_EVAL_POINT1:
+            glEvalPoint1(a[0].i);
+            break;
+        case RGL_OP_EVAL_POINT2:
+            glEvalPoint2(a[0].i, a[1].i);
+            break;
         case RGL_OP_FOG:
             floats(a + 1, f, 4);
             glFogfv(a[0].e, f);
@@ -272,6 +290,18 @@ static void execute_node(rgl_context *ctx, const struct rgl_list_node *n) {
             break;
         case RGL_OP_LOGIC_OP:
             glLogicOp(a[0].e);
+            break;
+        case RGL_OP_MAP1:
+            glMap1f(a[0].e, a[1].f, a[2].f, a[3].i, a[4].i, n->data);
+            break;
+        case RGL_OP_MAP2:
+            glMap2f(a[0].e, a[1].f, a[2].f, a[3].i, a[4].i, a[5].f, a[6].f, a[7].i, a[8].i, n->data);
+            break;
+        case RGL_OP_MAP_GRID1:
+            glMapGrid1f(a[0].i, a[1].f, a[2].f);
+            break;
+        case RGL_OP_MAP_GRID2:
+            glMapGrid2f(a[0].i, a[1].f, a[2].f, a[3].i, a[4].f, a[5].f);
             break;
         case RGL_OP_MATERIAL:
             floats(a + 2, f, 4);

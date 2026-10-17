@@ -47,10 +47,7 @@ void rgl_transform_vertex(rgl_context *ctx, const GLfloat object[4], struct rgl_
     rgl_matrix_transform(rgl_matrix_top(&ctx->transform.texture), tex_coord, v->tex_coord);
 }
 
-static void vertex(const GLfloat x, const GLfloat y, const GLfloat z, const GLfloat w) {
-    GET_CONTEXT(ctx);
-    if (SAVE(ctx, RGL_OP_VERTEX, {.f = x}, {.f = y}, {.f = z}, {.f = w}))
-        return;
+void rgl_emit_vertex(rgl_context *ctx, const GLfloat object[4]) {
     if (!ctx->in_begin_end)
         return;
 
@@ -61,15 +58,20 @@ static void vertex(const GLfloat x, const GLfloat y, const GLfloat z, const GLfl
     }
 
     struct rgl_vertex *v = &p->vertices[p->count++];
-    const GLfloat object[4] = {x, y, z, w};
     rgl_transform_vertex(ctx, object, v);
     v->edge_flag = ctx->current.edge_flag;
 }
 
-void glBegin(const GLenum mode) {
+static void vertex(const GLfloat x, const GLfloat y, const GLfloat z, const GLfloat w) {
     GET_CONTEXT(ctx);
-    if (SAVE(ctx, RGL_OP_BEGIN, {.e = mode}))
+    if (SAVE(ctx, RGL_OP_VERTEX, {.f = x}, {.f = y}, {.f = z}, {.f = w}))
         return;
+
+    const GLfloat object[4] = {x, y, z, w};
+    rgl_emit_vertex(ctx, object);
+}
+
+void rgl_begin(rgl_context *ctx, const GLenum mode) {
     OUTSIDE_BEGIN_END(ctx);
 
     if (mode > GL_POLYGON) {
@@ -81,11 +83,15 @@ void glBegin(const GLenum mode) {
     ctx->primitive.count = 0;
 }
 
-void glEnd(void) {
+void glBegin(const GLenum mode) {
     GET_CONTEXT(ctx);
-    if (SAVE0(ctx, RGL_OP_END))
+    if (SAVE(ctx, RGL_OP_BEGIN, {.e = mode}))
         return;
 
+    rgl_begin(ctx, mode);
+}
+
+void rgl_end(rgl_context *ctx) {
     if (!ctx->in_begin_end) {
         rgl_error(ctx, GL_INVALID_OPERATION);
         return;
@@ -93,6 +99,14 @@ void glEnd(void) {
     ctx->in_begin_end = GL_FALSE;
     rgl_render_primitive(ctx);
     ctx->primitive.count = 0;
+}
+
+void glEnd(void) {
+    GET_CONTEXT(ctx);
+    if (SAVE0(ctx, RGL_OP_END))
+        return;
+
+    rgl_end(ctx);
 }
 
 void glVertex2d(const GLdouble x, const GLdouble y) {

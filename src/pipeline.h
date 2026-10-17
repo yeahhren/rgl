@@ -18,6 +18,9 @@ void rgl_light_vertex(rgl_context *ctx, struct rgl_vertex *v);
 void rgl_texgen(const rgl_context *ctx, const GLfloat object[4], const struct rgl_vertex *v, GLfloat out[4]);
 GLboolean rgl_texgen_needs_normal(const rgl_context *ctx);
 void rgl_transform_vertex(rgl_context *ctx, const GLfloat object[4], struct rgl_vertex *v);
+void rgl_emit_vertex(rgl_context *ctx, const GLfloat object[4]);
+void rgl_begin(rgl_context *ctx, GLenum mode);
+void rgl_end(rgl_context *ctx);
 void rgl_render_primitive(rgl_context *ctx);
 
 GLboolean rgl_point_visible(const rgl_context *ctx, const struct rgl_vertex *v);

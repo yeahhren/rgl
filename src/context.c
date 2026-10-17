@@ -92,6 +92,7 @@ static void init_state(rgl_context *ctx) {
 
     rgl_init_lighting(ctx);
     rgl_init_texture(ctx);
+    rgl_init_eval(ctx);
 
     ctx->fog.mode = GL_EXP;
     ctx->fog.density = 1.0f;
@@ -136,6 +137,7 @@ void rgl_destroy_context(rgl_context *ctx) {
     free(ctx->primitive.clip[1]);
     rgl_free_texture(ctx);
     rgl_free_lists(ctx);
+    rgl_free_eval(ctx);
     free(ctx);
 }
 
