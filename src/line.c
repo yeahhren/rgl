@@ -21,6 +21,11 @@ static void projected_tex(const struct rgl_vertex *a, const struct rgl_vertex *b
 
 void rgl_raster_line(rgl_context *ctx, const struct rgl_vertex *a, const struct rgl_vertex *b,
                      const GLfloat *flat_color) {
+    if (ctx->enable.line_smooth) {
+        rgl_smooth_line(ctx, a, b, flat_color);
+        return;
+    }
+
     const GLfloat dx = b->window[0] - a->window[0];
     const GLfloat dy = b->window[1] - a->window[1];
     if (dx == 0.0f && dy == 0.0f)
@@ -51,6 +56,7 @@ void rgl_raster_line(rgl_context *ctx, const struct rgl_vertex *a, const struct 
     struct rgl_fragment frag;
     memset(frag.tex_dx, 0, sizeof(frag.tex_dx));
     memset(frag.tex_dy, 0, sizeof(frag.tex_dy));
+    frag.coverage = 1.0f;
 
     for (GLint i = start; i != end; i += step) {
         if (!stipple_pass(ctx))

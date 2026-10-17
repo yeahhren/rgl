@@ -108,13 +108,15 @@ static GLboolean query(rgl_context *ctx, const GLenum pname, struct values *o) {
             return GL_TRUE;
         case GL_POINT_SIZE_RANGE:
         case GL_LINE_WIDTH_RANGE: {
-            const GLfloat range[2] = {1.0f, pname == GL_POINT_SIZE_RANGE ? RGL_MAX_POINT_SIZE : RGL_MAX_LINE_WIDTH};
+            const GLfloat range[2] = {
+                RGL_MIN_SMOOTH_SIZE, pname == GL_POINT_SIZE_RANGE ? RGL_MAX_POINT_SIZE : RGL_MAX_LINE_WIDTH
+            };
             reals(o, 2, range);
             return GL_TRUE;
         }
         case GL_POINT_SIZE_GRANULARITY:
         case GL_LINE_WIDTH_GRANULARITY:
-            real(o, 1.0);
+            real(o, RGL_SMOOTH_GRANULARITY);
             return GL_TRUE;
         case GL_LINE_WIDTH:
             real(o, ctx->line.width);

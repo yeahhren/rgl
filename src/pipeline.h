@@ -12,6 +12,7 @@ struct rgl_fragment {
     GLfloat tex_dx[2];
     GLfloat tex_dy[2];
     GLfloat fog_z;
+    GLfloat coverage;
 };
 
 void rgl_light_vertex(rgl_context *ctx, struct rgl_vertex *v);
@@ -34,6 +35,12 @@ void rgl_clip_polygon(rgl_context *ctx, const struct rgl_vertex *const *vertices
 void rgl_raster_point(rgl_context *ctx, const struct rgl_vertex *v, const GLfloat *color);
 void rgl_raster_line(rgl_context *ctx, const struct rgl_vertex *a, const struct rgl_vertex *b,
                      const GLfloat *flat_color);
+void rgl_smooth_point(rgl_context *ctx, const struct rgl_vertex *v, const GLfloat *color);
+void rgl_smooth_line(rgl_context *ctx, const struct rgl_vertex *a, const struct rgl_vertex *b,
+                     const GLfloat *flat_color);
+void rgl_smooth_polygon(rgl_context *ctx, const struct rgl_vertex *vertices, size_t count,
+                        const GLfloat *flat_color);
+GLboolean rgl_polygon_stipple_pass(const rgl_context *ctx, GLint x, GLint y);
 void rgl_raster_polygon(rgl_context *ctx, struct rgl_vertex *vertices, size_t count,
                         const struct rgl_vertex *provoking);
 

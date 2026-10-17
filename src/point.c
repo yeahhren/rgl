@@ -5,6 +5,11 @@
 #include <string.h>
 
 void rgl_raster_point(rgl_context *ctx, const struct rgl_vertex *v, const GLfloat *color) {
+    if (ctx->enable.point_smooth) {
+        rgl_smooth_point(ctx, v, color);
+        return;
+    }
+
     const GLint size = rgl_integer_width(ctx->point.size, RGL_MAX_POINT_SIZE);
     GLint x0;
     GLint y0;
@@ -19,6 +24,7 @@ void rgl_raster_point(rgl_context *ctx, const struct rgl_vertex *v, const GLfloa
     struct rgl_fragment frag;
     frag.z = v->window[2];
     frag.fog_z = v->fog_z;
+    frag.coverage = 1.0f;
     memcpy(frag.color, color, sizeof(frag.color));
     memcpy(frag.tex_coord, v->tex_coord, sizeof(frag.tex_coord));
     memset(frag.tex_dx, 0, sizeof(frag.tex_dx));

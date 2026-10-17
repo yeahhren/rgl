@@ -17,6 +17,7 @@ void rgl_init_raster_fragment(const rgl_context *ctx, struct rgl_fragment *frag)
     memset(frag->tex_dx, 0, sizeof(frag->tex_dx));
     memset(frag->tex_dy, 0, sizeof(frag->tex_dy));
     frag->fog_z = r->distance;
+    frag->coverage = 1.0f;
 }
 
 static void raster_pos(const GLfloat x, const GLfloat y, const GLfloat z, const GLfloat w) {

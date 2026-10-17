@@ -28,6 +28,7 @@ add_library(rgl STATIC
         src/polygon.c
         src/primitive.c
         src/raster.c
+        src/smooth.c
         src/state.c
         src/texgen.c
         src/texture.c

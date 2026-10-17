@@ -27,7 +27,7 @@ static int64_t max3(const int64_t a, const int64_t b, const int64_t c) {
     return m > c ? m : c;
 }
 
-static GLboolean stipple_pass(const rgl_context *ctx, const GLint x, const GLint y) {
+GLboolean rgl_polygon_stipple_pass(const rgl_context *ctx, const GLint x, const GLint y) {
     if (!ctx->enable.polygon_stipple)
         return GL_TRUE;
     const GLubyte byte = ctx->polygon.stipple[(y & 31) * 4 + (x & 31) / 8];
@@ -125,6 +125,7 @@ static void triangle(rgl_context *ctx, const struct rgl_vertex *v0, const struct
     struct rgl_fragment frag;
     memset(frag.tex_dx, 0, sizeof(frag.tex_dx));
     memset(frag.tex_dy, 0, sizeof(frag.tex_dy));
+    frag.coverage = 1.0f;
 
     for (GLint py = y_min; py <= y_max; py++) {
         const int64_t sy = (int64_t) py * SUBPIXEL_ONE + SUBPIXEL_HALF;
@@ -135,7 +136,8 @@ static void triangle(rgl_context *ctx, const struct rgl_vertex *v0, const struct
         }
 
         for (GLint px = x_min; px <= x_max; px++) {
-            if (w[0] + bias[0] >= 0 && w[1] + bias[1] >= 0 && w[2] + bias[2] >= 0 && stipple_pass(ctx, px, py)) {
+            if (w[0] + bias[0] >= 0 && w[1] + bias[1] >= 0 && w[2] + bias[2] >= 0 &&
+                rgl_polygon_stipple_pass(ctx, px, py)) {
                 const GLdouble l0 = (GLdouble) w[0] / (GLdouble) area;
                 const GLdouble l1 = (GLdouble) w[1] / (GLdouble) area;
                 const GLdouble l2 = (GLdouble) w[2] / (GLdouble) area;
@@ -210,6 +212,10 @@ void rgl_raster_polygon(rgl_context *ctx, struct rgl_vertex *vertices, const siz
             }
             break;
         default:
+            if (ctx->enable.polygon_smooth) {
+                rgl_smooth_polygon(ctx, vertices, count, flat_color);
+                break;
+            }
             for (size_t i = 1; i + 1 < count; i++)
                 triangle(ctx, &vertices[0], &vertices[i], &vertices[i + 1], flat_color);
             break;
