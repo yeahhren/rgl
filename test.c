@@ -7,7 +7,7 @@
 #include <string.h>
 
 #define CELL 256
-#define WIDTH (3 * CELL)
+#define WIDTH (4 * CELL)
 #define HEIGHT (2 * CELL)
 
 static uint32_t crc_table[256];
@@ -375,6 +375,122 @@ static void draw_fragment_ops(void) {
     glDisable(GL_ALPHA_TEST);
 }
 
+static void perspective(const GLint col, const GLint row) {
+    glViewport(col * CELL, row * CELL, CELL, CELL);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glFrustum(-0.5, 0.5, -0.5, 0.5, 1.0, 20.0);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+}
+
+static void sphere(const float r, const int slices, const int stacks) {
+    for (int i = 0; i < stacks; i++) {
+        const float a0 = 3.1415927f * ((float) i / (float) stacks - 0.5f);
+        const float a1 = 3.1415927f * ((float) (i + 1) / (float) stacks - 0.5f);
+        glBegin(GL_QUAD_STRIP);
+        for (int j = 0; j <= slices; j++) {
+            const float b = 6.2831853f * (float) j / (float) slices;
+            glNormal3f(cosf(a1) * cosf(b), sinf(a1), cosf(a1) * sinf(b));
+            glVertex3f(r * cosf(a1) * cosf(b), r * sinf(a1), r * cosf(a1) * sinf(b));
+            glNormal3f(cosf(a0) * cosf(b), sinf(a0), cosf(a0) * sinf(b));
+            glVertex3f(r * cosf(a0) * cosf(b), r * sinf(a0), r * cosf(a0) * sinf(b));
+        }
+        glEnd();
+    }
+}
+
+static void draw_lit_sphere(void) {
+    static const GLfloat directional[4] = {-1.0f, 1.0f, 1.0f, 0.0f};
+    static const GLfloat positional[4] = {2.0f, -1.0f, -2.0f, 1.0f};
+    static const GLfloat red[4] = {1.0f, 0.2f, 0.1f, 1.0f};
+    static const GLfloat white[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+
+    perspective(3, 1);
+    glLightfv(GL_LIGHT0, GL_POSITION, directional);
+    glLightfv(GL_LIGHT1, GL_POSITION, positional);
+    glLightfv(GL_LIGHT1, GL_DIFFUSE, red);
+    glLightfv(GL_LIGHT1, GL_SPECULAR, red);
+    glLightf(GL_LIGHT1, GL_LINEAR_ATTENUATION, 0.2f);
+
+    glMaterialfv(GL_FRONT, GL_SPECULAR, white);
+    glMaterialf(GL_FRONT, GL_SHININESS, 40.0f);
+    glEnable(GL_COLOR_MATERIAL);
+    glColor3f(0.3f, 0.5f, 1.0f);
+
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+    glEnable(GL_LIGHT1);
+    glEnable(GL_DEPTH_TEST);
+
+    glTranslatef(0.0f, 0.0f, -4.0f);
+    sphere(1.0f, 48, 32);
+
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_LIGHT1);
+    glDisable(GL_LIGHT0);
+    glDisable(GL_LIGHTING);
+    glDisable(GL_COLOR_MATERIAL);
+}
+
+static void draw_spot_and_two_side(void) {
+    static const GLfloat spot_position[4] = {0.0f, 1.5f, 0.0f, 1.0f};
+    static const GLfloat spot_direction[3] = {0.3f, -1.0f, 0.0f};
+    static const GLfloat gold[4] = {1.0f, 0.75f, 0.2f, 1.0f};
+    static const GLfloat purple[4] = {0.6f, 0.2f, 1.0f, 1.0f};
+    static const GLfloat grey[4] = {0.8f, 0.8f, 0.8f, 1.0f};
+    static const GLfloat none[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+
+    perspective(3, 0);
+    glTranslatef(0.0f, -0.3f, -4.0f);
+    glRotatef(25.0f, 1.0f, 0.0f, 0.0f);
+
+    glLightfv(GL_LIGHT0, GL_POSITION, spot_position);
+    glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, spot_direction);
+    glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, 30.0f);
+    glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, 4.0f);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, none);
+
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+    glEnable(GL_DEPTH_TEST);
+
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, grey);
+    glNormal3f(0.0f, 1.0f, 0.0f);
+    for (int i = 0; i < 32; i++) {
+        const float z0 = -1.6f + (float) i * 0.1f;
+        glBegin(GL_QUAD_STRIP);
+        for (int j = 0; j <= 32; j++) {
+            const float x = -1.6f + (float) j * 0.1f;
+            glVertex3f(x, -0.5f, z0 + 0.1f);
+            glVertex3f(x, -0.5f, z0);
+        }
+        glEnd();
+    }
+
+    glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, 180.0f);
+    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
+    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, gold);
+    glMaterialfv(GL_BACK, GL_AMBIENT_AND_DIFFUSE, purple);
+    glPushMatrix();
+    glTranslatef(-0.6f, 0.4f, 0.0f);
+    glRotatef(60.0f, 0.0f, 1.0f, 0.0f);
+    glBegin(GL_QUAD_STRIP);
+    for (int j = 0; j <= 32; j++) {
+        const float a = 3.1415927f * (float) j / 32.0f;
+        glNormal3f(cosf(a), 0.0f, sinf(a));
+        glVertex3f(0.5f * cosf(a), -0.5f, 0.5f * sinf(a));
+        glVertex3f(0.5f * cosf(a), 0.5f, 0.5f * sinf(a));
+    }
+    glEnd();
+    glPopMatrix();
+    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_FALSE);
+
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_LIGHT0);
+    glDisable(GL_LIGHTING);
+}
+
 static void draw(void) {
     glClearColor(0.1f, 0.1f, 0.12f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -385,6 +501,8 @@ static void draw(void) {
     draw_polygons();
     draw_depth();
     draw_fragment_ops();
+    draw_lit_sphere();
+    draw_spot_and_two_side();
 }
 
 int main(const int argc, char **argv) {

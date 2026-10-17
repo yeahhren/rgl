@@ -52,6 +52,7 @@ static void init_state(rgl_context *ctx) {
     init_stack(&ctx->transform.modelview, RGL_MAX_MODELVIEW_STACK_DEPTH);
     init_stack(&ctx->transform.projection, RGL_MAX_PROJECTION_STACK_DEPTH);
     init_stack(&ctx->transform.texture, RGL_MAX_TEXTURE_STACK_DEPTH);
+    ctx->transform.modelview_inverse_dirty = GL_TRUE;
 
     for (int i = 0; i < 4; i++)
         ctx->current.color[i] = 1.0f;
@@ -72,7 +73,7 @@ static void init_state(rgl_context *ctx) {
     ctx->polygon.front_face = GL_CCW;
     memset(ctx->polygon.stipple, 0xff, sizeof(ctx->polygon.stipple));
 
-    ctx->lighting.shade_model = GL_SMOOTH;
+    rgl_init_lighting(ctx);
 }
 
 rgl_context *rgl_create_context(const GLsizei width, const GLsizei height) {
@@ -135,4 +136,8 @@ GLfloat rgl_clampf(const GLfloat x, const GLfloat lo, const GLfloat hi) {
 
 GLdouble rgl_clampd(const GLdouble x, const GLdouble lo, const GLdouble hi) {
     return x < lo ? lo : x > hi ? hi : x;
+}
+
+GLfloat rgl_int_to_float(const GLint c) {
+    return (GLfloat) ((2.0 * (GLdouble) c + 1.0) / 4294967295.0);
 }

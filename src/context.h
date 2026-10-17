@@ -101,6 +101,8 @@ struct rgl_transform {
     struct rgl_matrix_stack projection;
     struct rgl_matrix_stack texture;
     GLfloat clip_plane[RGL_MAX_CLIP_PLANES][4];
+    GLfloat modelview_inverse[16];
+    GLboolean modelview_inverse_dirty;
 };
 
 struct rgl_point {
@@ -148,8 +150,35 @@ struct rgl_pixel {
     GLenum read_buffer;
 };
 
+struct rgl_light {
+    GLfloat ambient[4];
+    GLfloat diffuse[4];
+    GLfloat specular[4];
+    GLfloat position[4];
+    GLfloat spot_direction[3];
+    GLfloat spot_exponent;
+    GLfloat spot_cutoff;
+    GLfloat attenuation[3];
+};
+
+struct rgl_material {
+    GLfloat ambient[4];
+    GLfloat diffuse[4];
+    GLfloat specular[4];
+    GLfloat emission[4];
+    GLfloat shininess;
+    GLfloat color_indexes[3];
+};
+
 struct rgl_lighting {
     GLenum shade_model;
+    struct rgl_light light[RGL_MAX_LIGHTS];
+    struct rgl_material material[2];
+    GLfloat model_ambient[4];
+    GLboolean local_viewer;
+    GLboolean two_side;
+    GLenum color_material_face;
+    GLenum color_material_mode;
 };
 
 struct rgl_current_values {
@@ -164,6 +193,7 @@ struct rgl_vertex {
     GLfloat eye[4];
     GLfloat clip[4];
     GLfloat color[4];
+    GLfloat back_color[4];
     GLfloat tex_coord[4];
     GLfloat normal[3];
     GLboolean edge_flag;
@@ -208,11 +238,16 @@ void rgl_error(rgl_context *ctx, GLenum error);
 
 GLfloat rgl_clampf(GLfloat x, GLfloat lo, GLfloat hi);
 GLdouble rgl_clampd(GLdouble x, GLdouble lo, GLdouble hi);
+GLfloat rgl_int_to_float(GLint c);
 
 void rgl_matrix_identity(GLfloat m[16]);
 void rgl_matrix_transform(const GLfloat m[16], const GLfloat in[4], GLfloat out[4]);
 GLfloat *rgl_matrix_top(struct rgl_matrix_stack *stack);
 GLboolean rgl_matrix_invert(const GLfloat m[16], GLfloat out[16]);
+const GLfloat *rgl_modelview_inverse(rgl_context *ctx);
+
+void rgl_init_lighting(rgl_context *ctx);
+void rgl_update_color_material(rgl_context *ctx);
 
 #define GET_CONTEXT(ctx) \
     struct rgl_context *ctx = rgl_current; \

@@ -41,11 +41,17 @@ static struct rgl_matrix_stack *current_stack(rgl_context *ctx) {
     }
 }
 
+static GLfloat *current_top(rgl_context *ctx) {
+    if (ctx->transform.matrix_mode == GL_MODELVIEW)
+        ctx->transform.modelview_inverse_dirty = GL_TRUE;
+    return rgl_matrix_top(current_stack(ctx));
+}
+
 static void mult_current(const GLfloat n[16]) {
     GET_CONTEXT(ctx);
     OUTSIDE_BEGIN_END(ctx);
 
-    multiply(rgl_matrix_top(current_stack(ctx)), n);
+    multiply(current_top(ctx), n);
 }
 
 static void to_float(const GLdouble *in, GLfloat out[16]) {
@@ -68,14 +74,14 @@ void glLoadIdentity(void) {
     GET_CONTEXT(ctx);
     OUTSIDE_BEGIN_END(ctx);
 
-    rgl_matrix_identity(rgl_matrix_top(current_stack(ctx)));
+    rgl_matrix_identity(current_top(ctx));
 }
 
 void glLoadMatrixf(const GLfloat *m) {
     GET_CONTEXT(ctx);
     OUTSIDE_BEGIN_END(ctx);
 
-    memcpy(rgl_matrix_top(current_stack(ctx)), m, 16 * sizeof(*m));
+    memcpy(current_top(ctx), m, 16 * sizeof(*m));
 }
 
 void glLoadMatrixd(const GLdouble *m) {
@@ -169,7 +175,7 @@ void glFrustum(const GLdouble left, const GLdouble right, const GLdouble bottom,
     n[10] = (GLfloat) (-(zFar + zNear) / (zFar - zNear));
     n[11] = -1.0f;
     n[14] = (GLfloat) (-2.0 * zFar * zNear / (zFar - zNear));
-    multiply(rgl_matrix_top(current_stack(ctx)), n);
+    multiply(current_top(ctx), n);
 }
 
 void glOrtho(const GLdouble left, const GLdouble right, const GLdouble bottom, const GLdouble top,
@@ -190,7 +196,7 @@ void glOrtho(const GLdouble left, const GLdouble right, const GLdouble bottom, c
     n[13] = (GLfloat) (-(top + bottom) / (top - bottom));
     n[14] = (GLfloat) (-(zFar + zNear) / (zFar - zNear));
     n[15] = 1.0f;
-    multiply(rgl_matrix_top(current_stack(ctx)), n);
+    multiply(current_top(ctx), n);
 }
 
 void glPushMatrix(void) {
@@ -216,6 +222,8 @@ void glPopMatrix(void) {
         return;
     }
     stack->depth--;
+    if (ctx->transform.matrix_mode == GL_MODELVIEW)
+        ctx->transform.modelview_inverse_dirty = GL_TRUE;
 }
 
 GLboolean rgl_matrix_invert(const GLfloat m[16], GLfloat out[16]) {
@@ -260,4 +268,14 @@ GLboolean rgl_matrix_invert(const GLfloat m[16], GLfloat out[16]) {
             out[c * 4 + r] = (GLfloat) a[r][c + 4];
     }
     return GL_TRUE;
+}
+
+const GLfloat *rgl_modelview_inverse(rgl_context *ctx) {
+    struct rgl_transform *t = &ctx->transform;
+    if (t->modelview_inverse_dirty) {
+        if (!rgl_matrix_invert(rgl_matrix_top(&t->modelview), t->modelview_inverse))
+            rgl_matrix_identity(t->modelview_inverse);
+        t->modelview_inverse_dirty = GL_FALSE;
+    }
+    return t->modelview_inverse;
 }

@@ -70,6 +70,8 @@ static void set_cap(const GLenum cap, const GLboolean value) {
         return;
     }
     *flag = value;
+    if (cap == GL_COLOR_MATERIAL)
+        rgl_update_color_material(ctx);
 }
 
 void glEnable(const GLenum cap) {

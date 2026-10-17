@@ -16,10 +16,6 @@ static GLfloat ushort_to_float(const GLushort c) {
     return (GLfloat) c / 65535.0f;
 }
 
-static GLfloat int_to_float(const GLint c) {
-    return (GLfloat) ((2.0 * (GLdouble) c + 1.0) / 4294967295.0);
-}
-
 static GLfloat uint_to_float(const GLuint c) {
     return (GLfloat) ((GLdouble) c / 4294967295.0);
 }
@@ -31,6 +27,7 @@ static void set_color(const GLfloat red, const GLfloat green, const GLfloat blue
     ctx->current.color[1] = green;
     ctx->current.color[2] = blue;
     ctx->current.color[3] = alpha;
+    rgl_update_color_material(ctx);
 }
 
 static void set_normal(const GLfloat nx, const GLfloat ny, const GLfloat nz) {
@@ -81,7 +78,7 @@ void glColor3fv(const GLfloat *v) {
 }
 
 void glColor3i(const GLint red, const GLint green, const GLint blue) {
-    set_color(int_to_float(red), int_to_float(green), int_to_float(blue), 1.0f);
+    set_color(rgl_int_to_float(red), rgl_int_to_float(green), rgl_int_to_float(blue), 1.0f);
 }
 
 void glColor3iv(const GLint *v) {
@@ -145,7 +142,7 @@ void glColor4fv(const GLfloat *v) {
 }
 
 void glColor4i(const GLint red, const GLint green, const GLint blue, const GLint alpha) {
-    set_color(int_to_float(red), int_to_float(green), int_to_float(blue), int_to_float(alpha));
+    set_color(rgl_int_to_float(red), rgl_int_to_float(green), rgl_int_to_float(blue), rgl_int_to_float(alpha));
 }
 
 void glColor4iv(const GLint *v) {
@@ -209,7 +206,7 @@ void glNormal3fv(const GLfloat *v) {
 }
 
 void glNormal3i(const GLint nx, const GLint ny, const GLint nz) {
-    set_normal(int_to_float(nx), int_to_float(ny), int_to_float(nz));
+    set_normal(rgl_int_to_float(nx), rgl_int_to_float(ny), rgl_int_to_float(nz));
 }
 
 void glNormal3iv(const GLint *v) {

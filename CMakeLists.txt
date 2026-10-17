@@ -12,6 +12,7 @@ add_library(rgl STATIC
         src/context.c
         src/current.c
         src/fragment.c
+        src/light.c
         src/line.c
         src/matrix.c
         src/point.c

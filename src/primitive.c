@@ -6,17 +6,21 @@ static const GLfloat *flat_color(const rgl_context *ctx, const struct rgl_vertex
     return ctx->lighting.shade_model == GL_FLAT ? provoking->color : NULL;
 }
 
+static const struct rgl_vertex *flat_vertex(const rgl_context *ctx, const struct rgl_vertex *provoking) {
+    return ctx->lighting.shade_model == GL_FLAT ? provoking : NULL;
+}
+
 static void triangle(rgl_context *ctx, const struct rgl_vertex *a, const struct rgl_vertex *b,
                      const struct rgl_vertex *c, const GLboolean use_edge_flags, const struct rgl_vertex *provoking) {
     const struct rgl_vertex *v[3] = {a, b, c};
-    rgl_clip_polygon(ctx, v, 3, use_edge_flags, flat_color(ctx, provoking));
+    rgl_clip_polygon(ctx, v, 3, use_edge_flags, flat_vertex(ctx, provoking));
 }
 
 static void quad(rgl_context *ctx, const struct rgl_vertex *a, const struct rgl_vertex *b,
                  const struct rgl_vertex *c, const struct rgl_vertex *d, const GLboolean use_edge_flags,
                  const struct rgl_vertex *provoking) {
     const struct rgl_vertex *v[4] = {a, b, c, d};
-    rgl_clip_polygon(ctx, v, 4, use_edge_flags, flat_color(ctx, provoking));
+    rgl_clip_polygon(ctx, v, 4, use_edge_flags, flat_vertex(ctx, provoking));
 }
 
 static void polygon(rgl_context *ctx, const struct rgl_vertex *vertices, const size_t count) {
@@ -30,7 +34,7 @@ static void polygon(rgl_context *ctx, const struct rgl_vertex *vertices, const s
     }
     for (size_t i = 0; i < count; i++)
         v[i] = &vertices[i];
-    rgl_clip_polygon(ctx, v, count, GL_TRUE, flat_color(ctx, &vertices[0]));
+    rgl_clip_polygon(ctx, v, count, GL_TRUE, flat_vertex(ctx, &vertices[0]));
     free(v);
 }
 

@@ -42,6 +42,7 @@ static void interpolate(struct rgl_vertex *out, const struct rgl_vertex *a, cons
     lerp(out->eye, a->eye, b->eye, t, 4);
     lerp(out->clip, a->clip, b->clip, t, 4);
     lerp(out->color, a->color, b->color, t, 4);
+    lerp(out->back_color, a->back_color, b->back_color, t, 4);
     lerp(out->tex_coord, a->tex_coord, b->tex_coord, t, 4);
     lerp(out->normal, a->normal, b->normal, t, 3);
 }
@@ -125,7 +126,7 @@ void rgl_clip_line(rgl_context *ctx, const struct rgl_vertex *a, const struct rg
 }
 
 void rgl_clip_polygon(rgl_context *ctx, const struct rgl_vertex *const *vertices, const size_t count,
-                      const GLboolean use_edge_flags, const GLfloat *flat_color) {
+                      const GLboolean use_edge_flags, const struct rgl_vertex *provoking) {
     if (!reserve(ctx, count + TOTAL_PLANES)) {
         rgl_error(ctx, GL_OUT_OF_MEMORY);
         return;
@@ -180,7 +181,7 @@ void rgl_clip_polygon(rgl_context *ctx, const struct rgl_vertex *const *vertices
             return;
         to_window(ctx, &in[i]);
     }
-    rgl_raster_polygon(ctx, in, n, flat_color);
+    rgl_raster_polygon(ctx, in, n, provoking);
 }
 
 void glClipPlane(const GLenum plane, const GLdouble *equation) {

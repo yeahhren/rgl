@@ -124,8 +124,8 @@ static void triangle(rgl_context *ctx, const struct rgl_vertex *v0, const struct
     }
 }
 
-void rgl_raster_polygon(rgl_context *ctx, const struct rgl_vertex *vertices, const size_t count,
-                        const GLfloat *flat_color) {
+void rgl_raster_polygon(rgl_context *ctx, struct rgl_vertex *vertices, const size_t count,
+                        const struct rgl_vertex *provoking) {
     GLdouble area = 0.0;
     for (size_t i = 0; i < count; i++) {
         const GLfloat *a = vertices[i].window;
@@ -139,6 +139,13 @@ void rgl_raster_polygon(rgl_context *ctx, const struct rgl_vertex *vertices, con
         if (cull == GL_FRONT_AND_BACK || (cull == GL_FRONT && front) || (cull == GL_BACK && !front))
             return;
     }
+
+    const GLboolean back_colors = !front && ctx->enable.lighting && ctx->lighting.two_side;
+    if (back_colors) {
+        for (size_t i = 0; i < count; i++)
+            memcpy(vertices[i].color, vertices[i].back_color, sizeof(vertices[i].color));
+    }
+    const GLfloat *flat_color = provoking ? back_colors ? provoking->back_color : provoking->color : NULL;
 
     switch (front ? ctx->polygon.front_mode : ctx->polygon.back_mode) {
         case GL_POINT:
