@@ -19,6 +19,8 @@ void rgl_raster_point(rgl_context *ctx, const struct rgl_vertex *v, const GLfloa
     frag.z = v->window[2];
     memcpy(frag.color, color, sizeof(frag.color));
     memcpy(frag.tex_coord, v->tex_coord, sizeof(frag.tex_coord));
+    memset(frag.tex_dx, 0, sizeof(frag.tex_dx));
+    memset(frag.tex_dy, 0, sizeof(frag.tex_dy));
 
     for (GLint y = y0; y < y0 + size; y++) {
         for (GLint x = x0; x < x0 + size; x++) {

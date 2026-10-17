@@ -9,9 +9,13 @@ struct rgl_fragment {
     GLfloat z;
     GLfloat color[4];
     GLfloat tex_coord[4];
+    GLfloat tex_dx[2];
+    GLfloat tex_dy[2];
 };
 
 void rgl_light_vertex(rgl_context *ctx, struct rgl_vertex *v);
+void rgl_texgen(const rgl_context *ctx, const GLfloat object[4], const struct rgl_vertex *v, GLfloat out[4]);
+GLboolean rgl_texgen_needs_normal(const rgl_context *ctx);
 void rgl_render_primitive(rgl_context *ctx);
 
 void rgl_clip_point(rgl_context *ctx, const struct rgl_vertex *v);
@@ -27,6 +31,8 @@ void rgl_raster_polygon(rgl_context *ctx, struct rgl_vertex *vertices, size_t co
                         const struct rgl_vertex *provoking);
 
 GLint rgl_integer_width(GLfloat width, GLint max);
+GLboolean rgl_texturing_enabled(const rgl_context *ctx);
+void rgl_texture_fragment(rgl_context *ctx, const struct rgl_fragment *frag, GLfloat color[4]);
 void rgl_write_fragment(rgl_context *ctx, const struct rgl_fragment *frag);
 
 #endif

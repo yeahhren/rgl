@@ -32,6 +32,40 @@ static GLboolean stipple_pass(const rgl_context *ctx, const GLint x, const GLint
     return byte >> (7 - (x & 7)) & 1u;
 }
 
+static void projected_tex(const struct rgl_vertex *const v[3], const int64_t w[3], GLfloat out[2]) {
+    GLdouble st[2] = {0.0, 0.0};
+    GLdouble q = 0.0;
+    for (int i = 0; i < 3; i++) {
+        const GLdouble p = (GLdouble) w[i] * v[i]->inv_w;
+        st[0] += p * v[i]->tex_coord[0];
+        st[1] += p * v[i]->tex_coord[1];
+        q += p * v[i]->tex_coord[3];
+    }
+    out[0] = q != 0.0 ? (GLfloat) (st[0] / q) : 0.0f;
+    out[1] = q != 0.0 ? (GLfloat) (st[1] / q) : 0.0f;
+}
+
+static void tex_derivatives(const struct rgl_vertex *const v[3], const int64_t w[3], const int64_t ex[3],
+                            const int64_t ey[3], struct rgl_fragment *frag) {
+    int64_t wx[3];
+    int64_t wy[3];
+    for (int i = 0; i < 3; i++) {
+        wx[i] = w[i] - ey[i] * SUBPIXEL_ONE;
+        wy[i] = w[i] + ex[i] * SUBPIXEL_ONE;
+    }
+
+    GLfloat st[2];
+    GLfloat sx[2];
+    GLfloat sy[2];
+    projected_tex(v, w, st);
+    projected_tex(v, wx, sx);
+    projected_tex(v, wy, sy);
+    for (int k = 0; k < 2; k++) {
+        frag->tex_dx[k] = sx[k] - st[k];
+        frag->tex_dy[k] = sy[k] - st[k];
+    }
+}
+
 static void triangle(rgl_context *ctx, const struct rgl_vertex *v0, const struct rgl_vertex *v1,
                      const struct rgl_vertex *v2, const GLfloat *flat_color) {
     const struct rgl_vertex *v[3] = {v0, v1, v2};
@@ -85,7 +119,10 @@ static void triangle(rgl_context *ctx, const struct rgl_vertex *v0, const struct
     }
 
     const int64_t sx0 = (int64_t) x_min * SUBPIXEL_ONE + SUBPIXEL_HALF;
+    const GLboolean textured = rgl_texturing_enabled(ctx);
     struct rgl_fragment frag;
+    memset(frag.tex_dx, 0, sizeof(frag.tex_dx));
+    memset(frag.tex_dy, 0, sizeof(frag.tex_dy));
 
     for (GLint py = y_min; py <= y_max; py++) {
         const int64_t sy = (int64_t) py * SUBPIXEL_ONE + SUBPIXEL_HALF;
@@ -116,6 +153,8 @@ static void triangle(rgl_context *ctx, const struct rgl_vertex *v0, const struct
                     frag.tex_coord[k] = (GLfloat) ((p0 * v[0]->tex_coord[k] + p1 * v[1]->tex_coord[k] +
                                                     p2 * v[2]->tex_coord[k]) / sum);
                 }
+                if (textured)
+                    tex_derivatives(v, w, ex, ey, &frag);
                 rgl_write_fragment(ctx, &frag);
             }
             for (int i = 0; i < 3; i++)

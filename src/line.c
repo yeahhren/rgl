@@ -1,11 +1,21 @@
 #include "pipeline.h"
 
 #include <math.h>
+#include <string.h>
 
 static GLboolean stipple_pass(rgl_context *ctx) {
     const GLuint bit = ctx->line.stipple_counter / (GLuint) ctx->line.stipple_factor % 16u;
     ctx->line.stipple_counter++;
     return !ctx->enable.line_stipple || (ctx->line.stipple_pattern >> bit & 1u);
+}
+
+static void projected_tex(const struct rgl_vertex *a, const struct rgl_vertex *b, const GLfloat t,
+                          GLfloat out[2]) {
+    const GLfloat wa = (1.0f - t) * a->inv_w;
+    const GLfloat wb = t * b->inv_w;
+    const GLfloat q = wa * a->tex_coord[3] + wb * b->tex_coord[3];
+    for (int k = 0; k < 2; k++)
+        out[k] = q != 0.0f ? (wa * a->tex_coord[k] + wb * b->tex_coord[k]) / q : 0.0f;
 }
 
 void rgl_raster_line(rgl_context *ctx, const struct rgl_vertex *a, const struct rgl_vertex *b,
@@ -36,7 +46,11 @@ void rgl_raster_line(rgl_context *ctx, const struct rgl_vertex *a, const struct 
         step = -1;
     }
 
+    const GLboolean textured = rgl_texturing_enabled(ctx);
     struct rgl_fragment frag;
+    memset(frag.tex_dx, 0, sizeof(frag.tex_dx));
+    memset(frag.tex_dy, 0, sizeof(frag.tex_dy));
+
     for (GLint i = start; i != end; i += step) {
         if (!stipple_pass(ctx))
             continue;
@@ -50,6 +64,15 @@ void rgl_raster_line(rgl_context *ctx, const struct rgl_vertex *a, const struct 
         for (int k = 0; k < 4; k++) {
             frag.color[k] = flat_color ? flat_color[k] : (wa * a->color[k] + wb * b->color[k]) / sum;
             frag.tex_coord[k] = (wa * a->tex_coord[k] + wb * b->tex_coord[k]) / sum;
+        }
+        if (textured) {
+            GLfloat st[2];
+            GLfloat next[2];
+            projected_tex(a, b, t, st);
+            projected_tex(a, b, t + (GLfloat) step / (mb - ma), next);
+            GLfloat *d = major == 0 ? frag.tex_dx : frag.tex_dy;
+            d[0] = next[0] - st[0];
+            d[1] = next[1] - st[1];
         }
 
         const GLint first = (GLint) floorf(na + t * (nb - na) - (GLfloat) (width - 1) * 0.5f);

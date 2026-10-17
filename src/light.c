@@ -138,16 +138,8 @@ void rgl_light_vertex(rgl_context *ctx, struct rgl_vertex *v) {
         for (int k = 0; k < 4; k++)
             v->color[k] = rgl_clampf(ctx->current.color[k], 0.0f, 1.0f);
         memcpy(v->back_color, v->color, sizeof(v->back_color));
-        memcpy(v->normal, ctx->current.normal, sizeof(v->normal));
         return;
     }
-
-    const GLfloat *inv = rgl_modelview_inverse(ctx);
-    const GLfloat *n = ctx->current.normal;
-    for (int j = 0; j < 3; j++)
-        v->normal[j] = n[0] * inv[j * 4] + n[1] * inv[j * 4 + 1] + n[2] * inv[j * 4 + 2];
-    if (ctx->enable.normalize)
-        normalize3(v->normal);
 
     GLfloat position[3];
     const GLfloat w = v->eye[3] != 0.0f ? v->eye[3] : 1.0f;
@@ -405,10 +397,6 @@ void glColorMaterial(const GLenum face, const GLenum mode) {
     rgl_update_color_material(ctx);
 }
 
-static GLint color_to_int(const GLfloat c) {
-    return (GLint) floor((4294967295.0 * c - 1.0) / 2.0 + 0.5);
-}
-
 static GLint round_to_int(const GLfloat v) {
     return (GLint) floorf(v + 0.5f);
 }
@@ -471,7 +459,7 @@ void glGetLightiv(const GLenum light, const GLenum pname, GLint *params) {
     if (!get_light_values(ctx, light, pname, values))
         return;
     for (int i = 0; i < light_size(pname); i++)
-        params[i] = is_light_color(pname) ? color_to_int(values[i]) : round_to_int(values[i]);
+        params[i] = is_light_color(pname) ? rgl_float_to_int(values[i]) : round_to_int(values[i]);
 }
 
 static int get_material_values(rgl_context *ctx, const GLenum face, const GLenum pname, GLfloat out[4]) {
@@ -522,5 +510,5 @@ void glGetMaterialiv(const GLenum face, const GLenum pname, GLint *params) {
     GLfloat values[4];
     const int n = get_material_values(ctx, face, pname, values);
     for (int i = 0; i < n; i++)
-        params[i] = is_material_color(pname) ? color_to_int(values[i]) : round_to_int(values[i]);
+        params[i] = is_material_color(pname) ? rgl_float_to_int(values[i]) : round_to_int(values[i]);
 }

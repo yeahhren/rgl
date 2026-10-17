@@ -1,5 +1,6 @@
 #include "context.h"
 
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -47,6 +48,8 @@ static void init_state(rgl_context *ctx) {
     ctx->stencil.zpass = GL_KEEP;
 
     ctx->pixel.read_buffer = GL_FRONT;
+    ctx->pixel.pack.alignment = 4;
+    ctx->pixel.unpack.alignment = 4;
 
     ctx->transform.matrix_mode = GL_MODELVIEW;
     init_stack(&ctx->transform.modelview, RGL_MAX_MODELVIEW_STACK_DEPTH);
@@ -74,6 +77,7 @@ static void init_state(rgl_context *ctx) {
     memset(ctx->polygon.stipple, 0xff, sizeof(ctx->polygon.stipple));
 
     rgl_init_lighting(ctx);
+    rgl_init_texture(ctx);
 }
 
 rgl_context *rgl_create_context(const GLsizei width, const GLsizei height) {
@@ -110,6 +114,7 @@ void rgl_destroy_context(rgl_context *ctx) {
     free(ctx->primitive.vertices);
     free(ctx->primitive.clip[0]);
     free(ctx->primitive.clip[1]);
+    rgl_free_texture(ctx);
     free(ctx);
 }
 
@@ -140,4 +145,8 @@ GLdouble rgl_clampd(const GLdouble x, const GLdouble lo, const GLdouble hi) {
 
 GLfloat rgl_int_to_float(const GLint c) {
     return (GLfloat) ((2.0 * (GLdouble) c + 1.0) / 4294967295.0);
+}
+
+GLint rgl_float_to_int(const GLfloat c) {
+    return (GLint) floor((4294967295.0 * c - 1.0) / 2.0 + 0.5);
 }

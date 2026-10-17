@@ -1,5 +1,6 @@
 #include "pipeline.h"
 
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -13,6 +14,21 @@ static GLboolean grow(struct rgl_primitive *p) {
     p->vertices = vertices;
     p->capacity = capacity;
     return GL_TRUE;
+}
+
+static void eye_normal(rgl_context *ctx, GLfloat out[3]) {
+    const GLfloat *inv = rgl_modelview_inverse(ctx);
+    const GLfloat *n = ctx->current.normal;
+    for (int j = 0; j < 3; j++)
+        out[j] = n[0] * inv[j * 4] + n[1] * inv[j * 4 + 1] + n[2] * inv[j * 4 + 2];
+
+    if (ctx->enable.normalize) {
+        const GLfloat len = sqrtf(out[0] * out[0] + out[1] * out[1] + out[2] * out[2]);
+        if (len > 0.0f) {
+            for (int k = 0; k < 3; k++)
+                out[k] /= len;
+        }
+    }
 }
 
 static void vertex(const GLfloat x, const GLfloat y, const GLfloat z, const GLfloat w) {
@@ -30,8 +46,15 @@ static void vertex(const GLfloat x, const GLfloat y, const GLfloat z, const GLfl
     const GLfloat object[4] = {x, y, z, w};
     rgl_matrix_transform(rgl_matrix_top(&ctx->transform.modelview), object, v->eye);
     rgl_matrix_transform(rgl_matrix_top(&ctx->transform.projection), v->eye, v->clip);
-    rgl_matrix_transform(rgl_matrix_top(&ctx->transform.texture), ctx->current.tex_coord, v->tex_coord);
+    if (ctx->enable.lighting || rgl_texgen_needs_normal(ctx))
+        eye_normal(ctx, v->normal);
+    else
+        memcpy(v->normal, ctx->current.normal, sizeof(v->normal));
     rgl_light_vertex(ctx, v);
+
+    GLfloat tex_coord[4];
+    rgl_texgen(ctx, object, v, tex_coord);
+    rgl_matrix_transform(rgl_matrix_top(&ctx->transform.texture), tex_coord, v->tex_coord);
     v->edge_flag = ctx->current.edge_flag;
 }
 

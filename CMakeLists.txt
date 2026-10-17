@@ -15,10 +15,13 @@ add_library(rgl STATIC
         src/light.c
         src/line.c
         src/matrix.c
+        src/pixel.c
         src/point.c
         src/polygon.c
         src/primitive.c
         src/state.c
+        src/texgen.c
+        src/texture.c
         src/vertex.c
 )
 target_include_directories(rgl
@@ -36,5 +39,6 @@ else ()
     target_compile_options(rgl PRIVATE -Wall -Wextra -Wpedantic)
 endif ()
 
-add_executable(rgl_test test.c)
+add_executable(rgl_test test.c png.c)
 target_link_libraries(rgl_test PRIVATE rgl)
+target_compile_definitions(rgl_test PRIVATE RGL_ASSET_DIR="${CMAKE_SOURCE_DIR}/assets")

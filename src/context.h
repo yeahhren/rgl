@@ -13,6 +13,9 @@
 #define RGL_MAX_PROJECTION_STACK_DEPTH 2
 #define RGL_MAX_TEXTURE_STACK_DEPTH 2
 
+#define RGL_MAX_TEXTURE_SIZE 1024
+#define RGL_MAX_TEXTURE_LEVELS 11
+
 #define RGL_MAX_POINT_SIZE 64
 #define RGL_MAX_LINE_WIDTH 64
 
@@ -146,8 +149,52 @@ struct rgl_stencil {
     GLenum zpass;
 };
 
+struct rgl_pixel_store {
+    GLboolean swap_bytes;
+    GLboolean lsb_first;
+    GLint row_length;
+    GLint skip_rows;
+    GLint skip_pixels;
+    GLint alignment;
+};
+
 struct rgl_pixel {
     GLenum read_buffer;
+    struct rgl_pixel_store pack;
+    struct rgl_pixel_store unpack;
+};
+
+struct rgl_texture_image {
+    GLsizei width;
+    GLsizei height;
+    GLint border;
+    GLint components;
+    GLfloat *data;
+};
+
+struct rgl_texture {
+    struct rgl_texture_image levels[RGL_MAX_TEXTURE_LEVELS];
+    GLenum min_filter;
+    GLenum mag_filter;
+    GLenum wrap_s;
+    GLenum wrap_t;
+    GLfloat border_color[4];
+    GLboolean complete;
+    GLboolean complete_dirty;
+};
+
+struct rgl_texgen {
+    GLenum mode;
+    GLfloat object_plane[4];
+    GLfloat eye_plane[4];
+};
+
+struct rgl_texture_state {
+    struct rgl_texture texture_1d;
+    struct rgl_texture texture_2d;
+    GLenum env_mode;
+    GLfloat env_color[4];
+    struct rgl_texgen gen[4];
 };
 
 struct rgl_light {
@@ -223,6 +270,7 @@ struct rgl_context {
     struct rgl_depth depth;
     struct rgl_stencil stencil;
     struct rgl_pixel pixel;
+    struct rgl_texture_state texture;
     struct rgl_transform transform;
     struct rgl_point point;
     struct rgl_line line;
@@ -239,6 +287,7 @@ void rgl_error(rgl_context *ctx, GLenum error);
 GLfloat rgl_clampf(GLfloat x, GLfloat lo, GLfloat hi);
 GLdouble rgl_clampd(GLdouble x, GLdouble lo, GLdouble hi);
 GLfloat rgl_int_to_float(GLint c);
+GLint rgl_float_to_int(GLfloat c);
 
 void rgl_matrix_identity(GLfloat m[16]);
 void rgl_matrix_transform(const GLfloat m[16], const GLfloat in[4], GLfloat out[4]);
@@ -247,6 +296,8 @@ GLboolean rgl_matrix_invert(const GLfloat m[16], GLfloat out[16]);
 const GLfloat *rgl_modelview_inverse(rgl_context *ctx);
 
 void rgl_init_lighting(rgl_context *ctx);
+void rgl_init_texture(rgl_context *ctx);
+void rgl_free_texture(rgl_context *ctx);
 void rgl_update_color_material(rgl_context *ctx);
 
 #define GET_CONTEXT(ctx) \

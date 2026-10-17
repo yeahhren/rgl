@@ -1,6 +1,7 @@
 #include "pipeline.h"
 
 #include <math.h>
+#include <string.h>
 
 GLint rgl_integer_width(const GLfloat width, const GLint max) {
     const GLint w = (GLint) floorf(width + 0.5f);
@@ -142,8 +143,13 @@ void rgl_write_fragment(rgl_context *ctx, const struct rgl_fragment *frag) {
         return;
     if (!scissor_pass(ctx, frag->x, frag->y))
         return;
+
+    GLfloat color[4];
+    memcpy(color, frag->color, sizeof(color));
+    rgl_texture_fragment(ctx, frag, color);
+
     if (ctx->enable.alpha_test &&
-        !compare(ctx->color_buffer.alpha_func, rgl_clampf(frag->color[3], 0.0f, 1.0f), ctx->color_buffer.alpha_ref))
+        !compare(ctx->color_buffer.alpha_func, rgl_clampf(color[3], 0.0f, 1.0f), ctx->color_buffer.alpha_ref))
         return;
 
     const size_t index = (size_t) frag->y * (size_t) fb->width + (size_t) frag->x;
@@ -171,7 +177,7 @@ void rgl_write_fragment(rgl_context *ctx, const struct rgl_fragment *frag) {
         stencil_update(ctx, index, ctx->stencil.zpass);
 
     if (ctx->color_buffer.draw_buffer != GL_NONE)
-        write_color(ctx, index, frag->color);
+        write_color(ctx, index, color);
 }
 
 void glAlphaFunc(const GLenum func, const GLclampf ref) {
