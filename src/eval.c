@@ -104,8 +104,8 @@ static void eval2(const rgl_context *ctx, const int index, const GLfloat u, cons
     const GLfloat tu = (u - m->u1) / (m->u2 - m->u1);
     const GLfloat tv = (v - m->v1) / (m->v2 - m->v1);
 
-    GLfloat c[RGL_MAX_EVAL_ORDER][4];
-    GLfloat dc[RGL_MAX_EVAL_ORDER][4];
+    GLfloat c[RGL_MAX_EVAL_ORDER][4] = {{0.0f}};
+    GLfloat dc[RGL_MAX_EVAL_ORDER][4] = {{0.0f}};
     for (int i = 0; i < m->uorder; i++)
         bezier(points + i * m->vorder * k, m->vorder, k, k, tv, c[i], dv != NULL ? dc[i] : NULL);
 

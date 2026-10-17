@@ -100,8 +100,8 @@ static void rasterize(rgl_context *ctx, const struct shape *s, const shade_fn sh
         const GLint y0 = (GLint) fmaxf(floorf(y_lo), 0.0f);
         const GLint y1 = (GLint) fminf(floorf(y_hi), (GLfloat) (ctx->fb.height - 1));
         for (GLint py = y0; py <= y1; py++) {
-            GLfloat sx;
-            GLfloat sy;
+            GLfloat sx = 0.0f;
+            GLfloat sy = 0.0f;
             const GLfloat cov = coverage(s, px, py, &sx, &sy);
             if (cov <= 0.0f)
                 continue;
