@@ -6,6 +6,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
 add_library(rgl STATIC
+        src/buffer.c
         src/clear.c
         src/clip.c
         src/context.c

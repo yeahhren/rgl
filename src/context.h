@@ -122,6 +122,32 @@ struct rgl_polygon {
     GLubyte stipple[128];
 };
 
+struct rgl_color_buffer {
+    GLenum alpha_func;
+    GLclampf alpha_ref;
+    GLenum blend_src;
+    GLenum blend_dst;
+    GLenum logic_op;
+    GLenum draw_buffer;
+};
+
+struct rgl_depth {
+    GLenum func;
+};
+
+struct rgl_stencil {
+    GLenum func;
+    GLint ref;
+    GLuint value_mask;
+    GLenum fail;
+    GLenum zfail;
+    GLenum zpass;
+};
+
+struct rgl_pixel {
+    GLenum read_buffer;
+};
+
 struct rgl_lighting {
     GLenum shade_model;
 };
@@ -163,6 +189,10 @@ struct rgl_context {
     struct rgl_mask mask;
     struct rgl_viewport viewport;
     struct rgl_scissor scissor;
+    struct rgl_color_buffer color_buffer;
+    struct rgl_depth depth;
+    struct rgl_stencil stencil;
+    struct rgl_pixel pixel;
     struct rgl_transform transform;
     struct rgl_point point;
     struct rgl_line line;

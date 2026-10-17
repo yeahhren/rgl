@@ -6,8 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define WIDTH 512
-#define HEIGHT 512
+#define CELL 256
+#define WIDTH (3 * CELL)
+#define HEIGHT (2 * CELL)
 
 static uint32_t crc_table[256];
 
@@ -124,8 +125,8 @@ static int write_png(const char *path, const GLubyte *rgba, const int width, con
     return ok;
 }
 
-static void cell(const GLint x, const GLint y) {
-    glViewport(x, y, WIDTH / 2, HEIGHT / 2);
+static void cell(const GLint col, const GLint row) {
+    glViewport(col * CELL, row * CELL, CELL, CELL);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0);
@@ -168,7 +169,7 @@ static void draw_shading(void) {
 }
 
 static void draw_lines(void) {
-    cell(WIDTH / 2, 0);
+    cell(1, 0);
 
     glBegin(GL_LINE_STRIP);
     for (int i = 0; i <= 32; i++) {
@@ -216,7 +217,7 @@ static void draw_cube(void) {
         {2, 3, 7, 6}, {0, 4, 7, 3}, {1, 2, 6, 5},
     };
 
-    glViewport(0, HEIGHT / 2, WIDTH / 2, HEIGHT / 2);
+    glViewport(0, CELL, CELL, CELL);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glFrustum(-1.0, 1.0, -1.0, 1.0, 1.5, 20.0);
@@ -258,7 +259,7 @@ static void draw_polygons(void) {
     for (int i = 0; i < 128; i++)
         stipple[i] = (i / 4 / 4) % 2 ? 0xf0 : 0x0f;
 
-    cell(WIDTH / 2, HEIGHT / 2);
+    cell(1, 1);
 
     glEnable(GL_POLYGON_STIPPLE);
     glPolygonStipple(stipple);
@@ -298,6 +299,82 @@ static void draw_polygons(void) {
     glDisable(GL_CLIP_PLANE0);
 }
 
+static void disc(const float cx, const float cy, const float r) {
+    glBegin(GL_TRIANGLE_FAN);
+    glVertex2f(cx, cy);
+    for (int i = 0; i <= 32; i++) {
+        const float a = (float) i * 6.2831853f / 32.0f;
+        glVertex2f(cx + r * cosf(a), cy + r * sinf(a));
+    }
+    glEnd();
+}
+
+static void draw_depth(void) {
+    cell(2, 0);
+
+    glEnable(GL_DEPTH_TEST);
+    glBegin(GL_TRIANGLES);
+    glColor3f(1.0f, 0.3f, 0.2f);
+    glVertex3f(-0.9f, -0.8f, -0.9f);
+    glVertex3f(0.9f, -0.8f, 0.9f);
+    glVertex3f(0.0f, 0.9f, 0.0f);
+    glColor3f(0.2f, 0.5f, 1.0f);
+    glVertex3f(-0.9f, 0.8f, 0.9f);
+    glVertex3f(0.0f, -0.9f, 0.0f);
+    glVertex3f(0.9f, 0.8f, -0.9f);
+    glEnd();
+
+    glDepthFunc(GL_GREATER);
+    glDepthMask(GL_FALSE);
+    glColor3f(1.0f, 1.0f, 1.0f);
+    disc(0.0f, 0.0f, 0.25f);
+    glDepthMask(GL_TRUE);
+    glDepthFunc(GL_LESS);
+    glDisable(GL_DEPTH_TEST);
+}
+
+static void draw_fragment_ops(void) {
+    cell(2, 1);
+
+    glEnable(GL_STENCIL_TEST);
+    glStencilFunc(GL_ALWAYS, 1, 1);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+    disc(-0.5f, 0.4f, 0.45f);
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    glStencilFunc(GL_EQUAL, 1, 1);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+    for (int i = 0; i < 10; i++) {
+        const float y = -0.1f + (float) i * 0.1f;
+        glColor3f(i % 2 ? 1.0f : 0.2f, 0.8f, i % 2 ? 0.2f : 1.0f);
+        glRectf(-1.0f, y, 0.0f, y + 0.1f);
+    }
+    glDisable(GL_STENCIL_TEST);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glColor4f(1.0f, 0.0f, 0.0f, 0.5f);
+    disc(0.45f, 0.55f, 0.3f);
+    glColor4f(0.0f, 1.0f, 0.0f, 0.5f);
+    disc(0.3f, 0.3f, 0.3f);
+    glColor4f(0.0f, 0.0f, 1.0f, 0.5f);
+    disc(0.6f, 0.3f, 0.3f);
+    glDisable(GL_BLEND);
+
+    glEnable(GL_ALPHA_TEST);
+    glAlphaFunc(GL_GREATER, 0.5f);
+    glBegin(GL_QUADS);
+    glColor4f(1.0f, 1.0f, 0.0f, 0.0f);
+    glVertex2f(-0.9f, -0.9f);
+    glColor4f(1.0f, 0.0f, 1.0f, 1.0f);
+    glVertex2f(0.9f, -0.9f);
+    glVertex2f(0.9f, -0.3f);
+    glColor4f(1.0f, 1.0f, 0.0f, 0.0f);
+    glVertex2f(-0.9f, -0.3f);
+    glEnd();
+    glDisable(GL_ALPHA_TEST);
+}
+
 static void draw(void) {
     glClearColor(0.1f, 0.1f, 0.12f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -306,6 +383,8 @@ static void draw(void) {
     draw_lines();
     draw_cube();
     draw_polygons();
+    draw_depth();
+    draw_fragment_ops();
 }
 
 int main(const int argc, char **argv) {

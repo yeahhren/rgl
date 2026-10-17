@@ -79,7 +79,7 @@ void glClear(const GLbitfield mask) {
     if (r.x0 >= r.x1 || r.y0 >= r.y1)
         return;
 
-    if (mask & GL_COLOR_BUFFER_BIT)
+    if (mask & GL_COLOR_BUFFER_BIT && ctx->color_buffer.draw_buffer != GL_NONE)
         clear_color(ctx, r);
     if (mask & GL_DEPTH_BUFFER_BIT)
         clear_depth(ctx, r);

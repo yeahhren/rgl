@@ -32,6 +32,22 @@ static void init_state(rgl_context *ctx) {
     ctx->scissor.width = ctx->fb.width;
     ctx->scissor.height = ctx->fb.height;
 
+    ctx->color_buffer.alpha_func = GL_ALWAYS;
+    ctx->color_buffer.blend_src = GL_ONE;
+    ctx->color_buffer.blend_dst = GL_ZERO;
+    ctx->color_buffer.logic_op = GL_COPY;
+    ctx->color_buffer.draw_buffer = GL_FRONT;
+
+    ctx->depth.func = GL_LESS;
+
+    ctx->stencil.func = GL_ALWAYS;
+    ctx->stencil.value_mask = ~0u;
+    ctx->stencil.fail = GL_KEEP;
+    ctx->stencil.zfail = GL_KEEP;
+    ctx->stencil.zpass = GL_KEEP;
+
+    ctx->pixel.read_buffer = GL_FRONT;
+
     ctx->transform.matrix_mode = GL_MODELVIEW;
     init_stack(&ctx->transform.modelview, RGL_MAX_MODELVIEW_STACK_DEPTH);
     init_stack(&ctx->transform.projection, RGL_MAX_PROJECTION_STACK_DEPTH);
