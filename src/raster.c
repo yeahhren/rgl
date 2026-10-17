@@ -41,6 +41,8 @@ static void raster_pos(const GLfloat x, const GLfloat y, const GLfloat z, const 
     memcpy(r->color, v.color, sizeof(r->color));
     r->index = ctx->current.index;
     memcpy(r->tex_coord, v.tex_coord, sizeof(r->tex_coord));
+    if (ctx->render_mode == GL_SELECT)
+        rgl_select_hit(ctx, r->window[2]);
 }
 
 void glBitmap(const GLsizei width, const GLsizei height, const GLfloat xorig, const GLfloat yorig,
@@ -64,7 +66,7 @@ void glBitmap(const GLsizei width, const GLsizei height, const GLfloat xorig, co
     if (!r->valid)
         return;
 
-    if (width > 0 && height > 0 && bitmap != NULL) {
+    if (!rgl_feedback_raster(ctx, GL_BITMAP_TOKEN) && width > 0 && height > 0 && bitmap != NULL) {
         GLubyte *bits = malloc((size_t) width * (size_t) height);
         if (bits == NULL) {
             rgl_error(ctx, GL_OUT_OF_MEMORY);

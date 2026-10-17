@@ -41,6 +41,15 @@ GLint rgl_integer_width(GLfloat width, GLint max);
 GLboolean rgl_texturing_enabled(const rgl_context *ctx);
 void rgl_texture_fragment(rgl_context *ctx, const struct rgl_fragment *frag, GLfloat color[4]);
 void rgl_fog_fragment(const rgl_context *ctx, const struct rgl_fragment *frag, GLfloat color[4]);
+void rgl_reset_line_stipple(rgl_context *ctx);
+void rgl_select_hit(rgl_context *ctx, GLfloat z);
+void rgl_feedback_point(rgl_context *ctx, const struct rgl_vertex *v);
+void rgl_feedback_line(rgl_context *ctx, const struct rgl_vertex *a, const struct rgl_vertex *b,
+                       const GLfloat *flat_color);
+void rgl_feedback_polygon(rgl_context *ctx, const struct rgl_vertex *vertices, size_t count,
+                          const GLfloat *flat_color, GLenum mode);
+GLboolean rgl_feedback_raster(rgl_context *ctx, GLenum token);
+
 void rgl_write_fragment(rgl_context *ctx, const struct rgl_fragment *frag);
 void rgl_write_stencil(rgl_context *ctx, GLint x, GLint y, GLuint value);
 void rgl_init_raster_fragment(const rgl_context *ctx, struct rgl_fragment *frag);

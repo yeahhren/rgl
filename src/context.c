@@ -94,6 +94,9 @@ static void init_state(rgl_context *ctx) {
     rgl_init_texture(ctx);
     rgl_init_eval(ctx);
 
+    ctx->render_mode = GL_RENDER;
+    ctx->feedback.type = GL_2D;
+
     ctx->fog.mode = GL_EXP;
     ctx->fog.density = 1.0f;
     ctx->fog.end = 1.0f;

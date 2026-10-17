@@ -88,7 +88,10 @@ void rgl_clip_point(rgl_context *ctx, const struct rgl_vertex *v) {
 
     struct rgl_vertex w = *v;
     rgl_to_window(ctx, &w);
-    rgl_raster_point(ctx, &w, w.color);
+    if (ctx->render_mode != GL_RENDER)
+        rgl_feedback_point(ctx, &w);
+    else
+        rgl_raster_point(ctx, &w, w.color);
 }
 
 void rgl_clip_line(rgl_context *ctx, const struct rgl_vertex *a, const struct rgl_vertex *b,
@@ -128,7 +131,10 @@ void rgl_clip_line(rgl_context *ctx, const struct rgl_vertex *a, const struct rg
 
     rgl_to_window(ctx, &p);
     rgl_to_window(ctx, &q);
-    rgl_raster_line(ctx, &p, &q, flat_color);
+    if (ctx->render_mode != GL_RENDER)
+        rgl_feedback_line(ctx, &p, &q, flat_color);
+    else
+        rgl_raster_line(ctx, &p, &q, flat_color);
 }
 
 void rgl_clip_polygon(rgl_context *ctx, const struct rgl_vertex *const *vertices, const size_t count,

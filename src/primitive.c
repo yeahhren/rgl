@@ -43,7 +43,7 @@ void rgl_render_primitive(rgl_context *ctx) {
     const struct rgl_vertex *v = ctx->primitive.vertices;
     const size_t n = ctx->primitive.count;
 
-    ctx->line.stipple_counter = 0;
+    rgl_reset_line_stipple(ctx);
 
     switch (ctx->primitive.mode) {
         case GL_POINTS:
@@ -52,7 +52,7 @@ void rgl_render_primitive(rgl_context *ctx) {
             break;
         case GL_LINES:
             for (size_t i = 0; i + 1 < n; i += 2) {
-                ctx->line.stipple_counter = 0;
+                rgl_reset_line_stipple(ctx);
                 rgl_clip_line(ctx, &v[i], &v[i + 1], flat_color(ctx, &v[i + 1]));
             }
             break;

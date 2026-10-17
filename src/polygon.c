@@ -188,8 +188,14 @@ void rgl_raster_polygon(rgl_context *ctx, struct rgl_vertex *vertices, const siz
             memcpy(vertices[i].color, vertices[i].back_color, sizeof(vertices[i].color));
     }
     const GLfloat *flat_color = provoking ? back_colors ? provoking->back_color : provoking->color : NULL;
+    const GLenum mode = front ? ctx->polygon.front_mode : ctx->polygon.back_mode;
 
-    switch (front ? ctx->polygon.front_mode : ctx->polygon.back_mode) {
+    if (ctx->render_mode != GL_RENDER) {
+        rgl_feedback_polygon(ctx, vertices, count, flat_color, mode);
+        return;
+    }
+
+    switch (mode) {
         case GL_POINT:
             for (size_t i = 0; i < count; i++) {
                 if (vertices[i].edge_flag)
@@ -197,7 +203,7 @@ void rgl_raster_polygon(rgl_context *ctx, struct rgl_vertex *vertices, const siz
             }
             break;
         case GL_LINE:
-            ctx->line.stipple_counter = 0;
+            rgl_reset_line_stipple(ctx);
             for (size_t i = 0; i < count; i++) {
                 if (vertices[i].edge_flag)
                     rgl_raster_line(ctx, &vertices[i], &vertices[(i + 1) % count], flat_color);

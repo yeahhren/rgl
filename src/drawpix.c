@@ -148,6 +148,8 @@ void glDrawPixels(const GLsizei width, const GLsizei height, const GLenum format
         rgl_error(ctx, GL_INVALID_VALUE);
         return;
     }
+    if (rgl_feedback_raster(ctx, GL_DRAW_PIXEL_TOKEN))
+        return;
     if (!ctx->raster.valid || width == 0 || height == 0 || pixels == NULL)
         return;
 
@@ -249,6 +251,8 @@ void glCopyPixels(const GLint x, const GLint y, const GLsizei width, const GLsiz
         rgl_error(ctx, GL_INVALID_VALUE);
         return;
     }
+    if (rgl_feedback_raster(ctx, GL_COPY_PIXEL_TOKEN))
+        return;
     if (!ctx->raster.valid || width == 0 || height == 0)
         return;
 

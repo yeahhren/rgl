@@ -264,6 +264,9 @@ static void execute_node(rgl_context *ctx, const struct rgl_list_node *n) {
         case RGL_OP_INDEX_MASK:
             glIndexMask(a[0].u);
             break;
+        case RGL_OP_INIT_NAMES:
+            glInitNames();
+            break;
         case RGL_OP_LIGHT:
             floats(a + 2, f, 4);
             glLightfv(a[0].e, a[1].e, f);
@@ -287,6 +290,9 @@ static void execute_node(rgl_context *ctx, const struct rgl_list_node *n) {
         case RGL_OP_LOAD_MATRIX:
             floats(a, f, 16);
             glLoadMatrixf(f);
+            break;
+        case RGL_OP_LOAD_NAME:
+            glLoadName(a[0].u);
             break;
         case RGL_OP_LOGIC_OP:
             glLogicOp(a[0].e);
@@ -320,6 +326,9 @@ static void execute_node(rgl_context *ctx, const struct rgl_list_node *n) {
         case RGL_OP_ORTHO:
             glOrtho(a[0].d, a[1].d, a[2].d, a[3].d, a[4].d, a[5].d);
             break;
+        case RGL_OP_PASS_THROUGH:
+            glPassThrough(a[0].f);
+            break;
         case RGL_OP_PIXEL_MAP:
             glPixelMapfv(a[0].e, a[1].i, n->data);
             break;
@@ -338,8 +347,14 @@ static void execute_node(rgl_context *ctx, const struct rgl_list_node *n) {
         case RGL_OP_POP_MATRIX:
             glPopMatrix();
             break;
+        case RGL_OP_POP_NAME:
+            glPopName();
+            break;
         case RGL_OP_PUSH_MATRIX:
             glPushMatrix();
+            break;
+        case RGL_OP_PUSH_NAME:
+            glPushName(a[0].u);
             break;
         case RGL_OP_RASTER_POS:
             glRasterPos4f(a[0].f, a[1].f, a[2].f, a[3].f);

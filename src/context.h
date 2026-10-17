@@ -21,6 +21,7 @@
 #define RGL_PIXEL_MAPS 10
 
 #define RGL_MAX_LIST_NESTING 64
+#define RGL_MAX_NAME_STACK_DEPTH 64
 
 #define RGL_MAX_POINT_SIZE 64
 #define RGL_MAX_LINE_WIDTH 64
@@ -133,6 +134,7 @@ struct rgl_line {
     GLint stipple_factor;
     GLushort stipple_pattern;
     GLuint stipple_counter;
+    GLboolean reset_token;
 };
 
 struct rgl_polygon {
@@ -344,6 +346,29 @@ struct rgl_eval {
     GLfloat grid2_v2;
 };
 
+struct rgl_select {
+    GLuint *buffer;
+    GLsizei size;
+    GLsizei count;
+    GLint hits;
+    GLboolean overflow;
+    GLboolean buffer_set;
+    GLboolean hit;
+    GLfloat min_z;
+    GLfloat max_z;
+    GLuint names[RGL_MAX_NAME_STACK_DEPTH];
+    GLint depth;
+};
+
+struct rgl_feedback {
+    GLfloat *buffer;
+    GLsizei size;
+    GLsizei count;
+    GLenum type;
+    GLboolean overflow;
+    GLboolean buffer_set;
+};
+
 struct rgl_list_node;
 
 struct rgl_display_list {
@@ -389,6 +414,9 @@ struct rgl_context {
     struct rgl_raster_pos raster;
     struct rgl_list_state list;
     struct rgl_eval eval;
+    GLenum render_mode;
+    struct rgl_select select;
+    struct rgl_feedback feedback;
     struct rgl_primitive primitive;
 };
 
