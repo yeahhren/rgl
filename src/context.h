@@ -25,6 +25,8 @@
 #define RGL_SUBPIXEL_BITS 4
 #define RGL_DEPTH_BITS 24
 #define RGL_STENCIL_BITS 8
+#define RGL_ACCUM_BITS 16
+#define RGL_ACCUM_MAX 32767
 #define RGL_DEPTH_MAX ((1u << RGL_DEPTH_BITS) - 1u)
 #define RGL_STENCIL_MAX ((1u << RGL_STENCIL_BITS) - 1u)
 
@@ -34,6 +36,14 @@ struct rgl_framebuffer {
     GLubyte *color;
     GLuint *depth;
     GLubyte *stencil;
+    GLshort *accum;
+};
+
+struct rgl_rect {
+    GLint x0;
+    GLint y0;
+    GLint x1;
+    GLint y1;
 };
 
 struct rgl_enable {
@@ -328,6 +338,8 @@ struct rgl_context {
 extern rgl_context *rgl_current;
 
 void rgl_error(rgl_context *ctx, GLenum error);
+
+struct rgl_rect rgl_scissor_rect(const rgl_context *ctx);
 
 GLfloat rgl_clampf(GLfloat x, GLfloat lo, GLfloat hi);
 GLdouble rgl_clampd(GLdouble x, GLdouble lo, GLdouble hi);

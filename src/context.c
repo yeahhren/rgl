@@ -112,7 +112,8 @@ rgl_context *rgl_create_context(const GLsizei width, const GLsizei height) {
     ctx->fb.color = calloc(pixels, 4);
     ctx->fb.depth = calloc(pixels, sizeof(*ctx->fb.depth));
     ctx->fb.stencil = calloc(pixels, 1);
-    if (ctx->fb.color == NULL || ctx->fb.depth == NULL || ctx->fb.stencil == NULL) {
+    ctx->fb.accum = calloc(pixels * 4, sizeof(*ctx->fb.accum));
+    if (ctx->fb.color == NULL || ctx->fb.depth == NULL || ctx->fb.stencil == NULL || ctx->fb.accum == NULL) {
         rgl_destroy_context(ctx);
         return NULL;
     }
@@ -129,6 +130,7 @@ void rgl_destroy_context(rgl_context *ctx) {
     free(ctx->fb.color);
     free(ctx->fb.depth);
     free(ctx->fb.stencil);
+    free(ctx->fb.accum);
     free(ctx->primitive.vertices);
     free(ctx->primitive.clip[0]);
     free(ctx->primitive.clip[1]);

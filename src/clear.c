@@ -1,16 +1,12 @@
 #include "context.h"
 
+#include <math.h>
+#include <string.h>
+
 #define CLEAR_BITS (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_ACCUM_BUFFER_BIT)
 
-struct rect {
-    GLint x0;
-    GLint y0;
-    GLint x1;
-    GLint y1;
-};
-
-static struct rect clear_rect(const rgl_context *ctx) {
-    struct rect r = {.x0 = 0, .y0 = 0, .x1 = ctx->fb.width, .y1 = ctx->fb.height};
+struct rgl_rect rgl_scissor_rect(const rgl_context *ctx) {
+    struct rgl_rect r = {.x0 = 0, .y0 = 0, .x1 = ctx->fb.width, .y1 = ctx->fb.height};
 
     if (ctx->enable.scissor_test) {
         const struct rgl_scissor *s = &ctx->scissor;
@@ -26,7 +22,7 @@ static struct rect clear_rect(const rgl_context *ctx) {
     return r;
 }
 
-static void clear_color(const rgl_context *ctx, const struct rect r) {
+static void clear_color(const rgl_context *ctx, const struct rgl_rect r) {
     GLubyte value[4];
     for (int i = 0; i < 4; i++)
         value[i] = (GLubyte) (ctx->clear.color[i] * 255.0f + 0.5f);
@@ -42,7 +38,7 @@ static void clear_color(const rgl_context *ctx, const struct rect r) {
     }
 }
 
-static void clear_depth(const rgl_context *ctx, const struct rect r) {
+static void clear_depth(const rgl_context *ctx, const struct rgl_rect r) {
     if (!ctx->mask.depth)
         return;
 
@@ -55,7 +51,19 @@ static void clear_depth(const rgl_context *ctx, const struct rect r) {
     }
 }
 
-static void clear_stencil(const rgl_context *ctx, const struct rect r) {
+static void clear_accum(const rgl_context *ctx, const struct rgl_rect r) {
+    GLshort value[4];
+    for (int i = 0; i < 4; i++)
+        value[i] = (GLshort) floorf(ctx->clear.accum[i] * RGL_ACCUM_MAX + 0.5f);
+
+    for (GLint y = r.y0; y < r.y1; y++) {
+        GLshort *p = ctx->fb.accum + ((size_t) y * (size_t) ctx->fb.width + (size_t) r.x0) * 4;
+        for (GLint x = r.x0; x < r.x1; x++, p += 4)
+            memcpy(p, value, sizeof(value));
+    }
+}
+
+static void clear_stencil(const rgl_context *ctx, const struct rgl_rect r) {
     const GLubyte mask = (GLubyte) (ctx->mask.stencil & RGL_STENCIL_MAX);
     const GLubyte value = (GLubyte) ((GLuint) ctx->clear.stencil & mask);
 
@@ -75,7 +83,7 @@ void glClear(const GLbitfield mask) {
         return;
     }
 
-    const struct rect r = clear_rect(ctx);
+    const struct rgl_rect r = rgl_scissor_rect(ctx);
     if (r.x0 >= r.x1 || r.y0 >= r.y1)
         return;
 
@@ -85,6 +93,8 @@ void glClear(const GLbitfield mask) {
         clear_depth(ctx, r);
     if (mask & GL_STENCIL_BUFFER_BIT)
         clear_stencil(ctx, r);
+    if (mask & GL_ACCUM_BUFFER_BIT)
+        clear_accum(ctx, r);
 }
 
 void glClearColor(const GLclampf red, const GLclampf green, const GLclampf blue, const GLclampf alpha) {
